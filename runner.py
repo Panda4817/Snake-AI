@@ -40,26 +40,6 @@ while True:
     screen.fill(black)
 
     # Common buttons
-    humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, 50)
-    human = mediumFont.render("Human plays Snake", True, black)
-    humanRect = human.get_rect()
-    humanRect.center = humanButton.center
-    
-    aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, 50)
-    ai = mediumFont.render("AI plays Snake", True, black)
-    aiRect = ai.get_rect()
-    aiRect.center = aiButton.center
-
-    tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, 50)
-    tron = mediumFont.render("Tron Snake", True, black)
-    tronRect = tron.get_rect()
-    tronRect.center = tronButton.center
-
-    howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
-    howToPlay = mediumFont.render("How to play", True, black)
-    howToPlayRect = howToPlay.get_rect()
-    howToPlayRect.center = howToPlayButton.center
-    
     backButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
     back = mediumFont.render("Back", True, black)
     backRect = back.get_rect()
@@ -79,6 +59,25 @@ while True:
         screen.blit(title, titleRect)
 
         # Draw buttons
+        humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, 50)
+        human = mediumFont.render("Human plays Snake", True, black)
+        humanRect = human.get_rect()
+        humanRect.center = humanButton.center
+        
+        aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, 50)
+        ai = mediumFont.render("AI plays Snake", True, black)
+        aiRect = ai.get_rect()
+        aiRect.center = aiButton.center
+
+        tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, 50)
+        tron = mediumFont.render("Tron Snake", True, black)
+        tronRect = tron.get_rect()
+        tronRect.center = tronButton.center
+
+        howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
+        howToPlay = mediumFont.render("How to play", True, black)
+        howToPlayRect = howToPlay.get_rect()
+        howToPlayRect.center = howToPlayButton.center
         
         pygame.draw.rect(screen, white, humanButton)
         screen.blit(human, humanRect)
@@ -202,7 +201,7 @@ while True:
             # Show game over title
             game_over = largeFont.render("Game Over", True, white)
             goRect = game_over.get_rect()
-            goRect.center = ((width / 4), 50)
+            goRect.center = ((width / 3), 50)
             screen.blit(game_over, goRect)
             # Draw back button
             pygame.draw.rect(screen, white, backButton)
