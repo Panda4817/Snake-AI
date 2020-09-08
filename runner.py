@@ -4,22 +4,31 @@ import time
 
 from snake import *
 
+# Initialise Pygame
 pygame.init()
 size = width, height = 1750, 750
+screen = pygame.display.set_mode(size)
+
 
 # Colors
 black = (0, 0, 0)
 white = (255, 255, 255)
 green = (0, 255, 0)
 red = (255, 0, 0)
+blue = (0, 0, 255)
+yellow = (255, 255, 0)
 
-screen = pygame.display.set_mode(size)
-
+# Fonts
 largeFont = pygame.font.Font("OpenSans-Regular.ttf", 40)
 mediumFont = pygame.font.Font("OpenSans-Regular.ttf", 28)
 smallFont = pygame.font.Font("OpenSans-Regular.ttf", 18)
-startGame = False
+
+# Game mode variables
+humanGame = False
+aiGame = False
+tronGame = False
 instructions = False
+homeScreen = True
 
 
 while True:
@@ -27,48 +36,41 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-        """
-        # captures the 'KEYDOWN' and 'KEYUP' events
-        if event.type in (pygame.KEYDOWN, pygame.KEYUP):
-            # gets the key name
-            key_name = pygame.key.name(event.key)
-
-            # converts to uppercase the key name
-            key_name = key_name.upper()
-
-            # if any key is pressed
-            if event.type == pygame.KEYDOWN:
-                # prints on the console the key pressed
-                print(f'{key_name} key pressed')
-
-            # if any key is released
-            elif event.type == pygame.KEYUP:
-                # prints on the console the released key
-                print(f'{key_name} key released')
-        """
+        
     screen.fill(black)
 
     # Common buttons
-    playButton = pygame.Rect((width / 8), (height / 2), width / 4, 50)
-    play = mediumFont.render("Play", True, black)
-    playRect = play.get_rect()
-    playRect.center = playButton.center
-    howToPlayButton = pygame.Rect(4* (width / 8), (height / 2), width / 3, 50)
+    humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, 50)
+    human = mediumFont.render("Human plays Snake", True, black)
+    humanRect = human.get_rect()
+    humanRect.center = humanButton.center
+    
+    aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, 50)
+    ai = mediumFont.render("AI plays Snake", True, black)
+    aiRect = ai.get_rect()
+    aiRect.center = aiButton.center
+
+    tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, 50)
+    tron = mediumFont.render("Tron Snake", True, black)
+    tronRect = tron.get_rect()
+    tronRect.center = tronButton.center
+
+    howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
     howToPlay = mediumFont.render("How to play", True, black)
     howToPlayRect = howToPlay.get_rect()
     howToPlayRect.center = howToPlayButton.center
-    backButton = pygame.Rect(5* (width / 8), (height / 2), width / 4, 50)
+    
+    backButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
     back = mediumFont.render("Back", True, black)
     backRect = back.get_rect()
     backRect.center = backButton.center
 
-    if startGame is False and instructions is False:
-        # Setup board and snake
+    if homeScreen is True:
+        # Setup board
         new_board = Board()
         new_board.setup()
         new_board.place_food()
-        snake = Snake()
-        snake.setup(new_board)
+        
 
         # Draw title
         title = largeFont.render("Play Snake", True, white)
@@ -78,9 +80,12 @@ while True:
 
         # Draw buttons
         
-        pygame.draw.rect(screen, white, playButton)
-        screen.blit(play, playRect)
-        
+        pygame.draw.rect(screen, white, humanButton)
+        screen.blit(human, humanRect)
+        pygame.draw.rect(screen, white, aiButton)
+        screen.blit(ai, aiRect)
+        pygame.draw.rect(screen, white, tronButton)
+        screen.blit(tron, tronRect)
         pygame.draw.rect(screen, white, howToPlayButton)
         screen.blit(howToPlay, howToPlayRect)
 
@@ -88,38 +93,70 @@ while True:
         click, _, _= pygame.mouse.get_pressed()
         if click == 1:
             mouse = pygame.mouse.get_pos()
-            if playButton.collidepoint(mouse):
+            if humanButton.collidepoint(mouse):
+                # setup human snake
+                snake = Snake()
+                snake.setup(new_board)
                 time.sleep(0.2)
-                startGame = True
+                humanGame = True
+                homeScreen = False
+            elif aiButton.collidepoint(mouse):
+                time.sleep(0.2)
+                aiGame = True
+                homeScreen = False
+            elif tronButton.collidepoint(mouse):
+                time.sleep(0.2)
+                tronGame = True
+                homeScreen = False
             elif howToPlayButton.collidepoint(mouse):
                 time.sleep(0.2)
                 instructions = True
+                homeScreen = False
     
-    elif startGame is False and instructions is True:
+    elif instructions is True:
 
         # Draw title
-        title = largeFont.render("How to play Snake", True, white)
+        title = largeFont.render("How to play", True, white)
         titleRect = title.get_rect()
         titleRect.center = ((width / 2), 50)
         screen.blit(title, titleRect)
 
         # Draw instructions
-        text1 = smallFont.render("Use arrow keys to control the snake: red squares.", True, white)
-        text2 = smallFont.render("Eat the food: green squares.", True, white)
-        text3 = smallFont.render("Avoid the edge and your own body.", True, white)
-        text1Rect = text1.get_rect()
-        text1Rect.center = ((width / 2), (height / 2) - 75)
-        text2Rect = text2.get_rect()
-        text2Rect.center = ((width / 2), (height / 2) - 55)
-        text3Rect = text3.get_rect()
-        text3Rect.center = ((width / 2), (height / 2) - 35)
-        screen.blit(text1, text1Rect)
-        screen.blit(text2, text2Rect)
-        screen.blit(text3, text3Rect)
+        texts = [
+            'Use arrow keys to control the snake: red squares.',
+            'Eat the food: green squares.',
+            'Avoid the edge and your own body.',
+            'AI trains and then plays snake. Human watches.',
+            'Human: blue snake vs AI: yellow snake.',
+            'Avoid AI snake, your own body and walls.',
+            'Eat the food: green squares.'
+        ]
+        gameTitles = [
+            'Human plays Snake',
+            'AI plays Snake',
+            'Tron Snake'
+        ]
+        for i, gameTitle in enumerate(gameTitles):
+            line = mediumFont.render(gameTitle, True, green)
+            lineRect = line.get_rect()
+            # lineRect = pygame.Rect((width / 4), ((i) / 4) * height + 70, width / 2, 10)
+            lineRect.center = ((width / 2), ((i) / 4) * height + 100)
+            screen.blit(line, lineRect)
+        for i, text in enumerate(texts):
+            line = smallFont.render(text, True, white)
+            lineRect = line.get_rect()
+            if i >= 0 and i <= 2:
+                # lineRect = pygame.Rect((width / 4), ((i + 10) / 100) * height + 20 * (i + 2), width / 2, 10)
+                lineRect.center = ((width / 2), ((i + 10) / 100) * height + 25 * (i + 2))
+            elif i == 3:
+                # lineRect = pygame.Rect((width / 4), ((i + 30) / 100) * height + 20 * i, width / 2, 10)
+                lineRect.center = ((width / 2), ((i + 30) / 100) * height + 25 * i)
+            elif i > 3:
+                # lineRect = pygame.Rect((width / 4), ((i + 50) / 100) * height + 20 * i, width / 2, 10)
+                lineRect.center = ((width / 2), ((i + 50) / 100) * height + 25 * i)
+            screen.blit(line, lineRect)
 
         # Draw buttons
-        pygame.draw.rect(screen, white, playButton)
-        screen.blit(play, playRect)
         pygame.draw.rect(screen, white, backButton)
         screen.blit(back, backRect)
 
@@ -127,13 +164,12 @@ while True:
         click, _, _= pygame.mouse.get_pressed()
         if click == 1:
             mouse = pygame.mouse.get_pos()
-            instructions = False
-            if playButton.collidepoint(mouse):
-                time.sleep(0.2)    
-                startGame = True
-            elif backButton.collidepoint(mouse):
+            if backButton.collidepoint(mouse):
+                instructions = False
+                homeScreen = True
                 time.sleep(0.2)
-    else:
+
+    elif humanGame is True:
         # Draw board and score
         tile_size = 10
         tiles = []
@@ -163,23 +199,22 @@ while True:
         
         # Check game over
         if snake.check_game_status(new_board):
+            # Show game over title
             game_over = largeFont.render("Game Over", True, white)
             goRect = game_over.get_rect()
-            goRect = pygame.Rect(152 * tile_size, 20 * tile_size, 250, 100)
+            goRect.center = ((width / 4), 50)
             screen.blit(game_over, goRect)
+            # Draw back button
+            pygame.draw.rect(screen, white, backButton)
+            screen.blit(back, backRect)
             
-            bButton = pygame.Rect(155 * tile_size, 25 * tile_size, 100, 50)
-            b = mediumFont.render("Back", True, black)
-            bRect = b.get_rect()
-            bRect.center = bButton.center
-            pygame.draw.rect(screen, white, bButton)
-            screen.blit(b, bRect)
             # Check if button is clicked
             click, _, _= pygame.mouse.get_pressed()
             if click == 1:
                 mouse = pygame.mouse.get_pos()
-                if bButton.collidepoint(mouse):
-                    startGame = False
+                if backButton.collidepoint(mouse):
+                    humanGame = False
+                    homeScreen = True
         else:
             # check if snake is in food tile, if so increase snake length and score, place food in random place
             snake.check_food_status(new_board)
@@ -205,6 +240,11 @@ while True:
                     snake.direction = snake.left
             # snake moves 1 square in given direction
             snake.move_snake(new_board)
-            
+
+    elif aiGame is True:
+        pass
+
+    elif tronGame is True:
+        pass       
 
     pygame.display.flip()
