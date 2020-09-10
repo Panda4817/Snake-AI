@@ -2,3 +2,4 @@ pygame
 numpy
 tensorflow
 tf-agent
+gym==0.10.11

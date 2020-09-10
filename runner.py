@@ -2,7 +2,10 @@ import pygame
 import sys
 import time
 
+import numpy as np
+
 from snake import *
+from snake_ai import *
 
 # Initialise Pygame
 pygame.init()
@@ -14,7 +17,6 @@ tile_size = 10
 leftover = 25
 h = int(height / tile_size)
 w = int((width - (leftover * tile_size)) / tile_size)
-
 
 # Colors
 black = (0, 0, 0)
@@ -39,6 +41,15 @@ tronGame = False
 instructions = False
 homeScreen = True
 
+# Setup board and snake objects for human game
+new_board = Board(h=h, w=w)
+snake = Snake()
+
+# ai variables
+num_episodes = 3
+time_step = eval_env.reset()
+policy = saved_policy
+
 
 while True:
 
@@ -55,11 +66,6 @@ while True:
     backRect.center = backButton.center
 
     if homeScreen is True:
-        # Setup board
-        new_board = Board(h=h, w=w)
-        new_board.setup()
-        new_board.place_food()
-        
 
         # Draw title
         title = largeFont.render("Play Snake", True, white)
@@ -103,12 +109,14 @@ while True:
             mouse = pygame.mouse.get_pos()
             if humanButton.collidepoint(mouse):
                 # setup human snake
-                snake = Snake()
-                snake.setup(new_board)
+                snake.reset(new_board)
                 time.sleep(0.2)
                 humanGame = True
                 homeScreen = False
             elif aiButton.collidepoint(mouse):
+                # Set up training and evaluating environment
+                time_step = eval_env.reset()
+                num_episodes = 3
                 time.sleep(0.2)
                 aiGame = True
                 homeScreen = False
@@ -252,7 +260,56 @@ while True:
             snake.move_snake(new_board)
 
     elif aiGame is True:
-        pass
+        # Draw board and score
+        tiles = []
+        for i in range(new_board.height):
+            row = []
+            for j in range(new_board.width):
+                rect = pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size)
+                if (i, j) in new_board.wall_cells:
+                    pygame.draw.rect(screen, white, rect)
+                elif (i, j) == new_board.food_cell:
+                    pygame.draw.rect(screen, green, rect)
+                elif new_board.structure[i][j] == new_board.snake:
+                    pygame.draw.rect(screen, red, rect)
+                else:
+                    pygame.draw.rect(screen, black, rect)
+                row.append(rect)
+            tiles.append(row)
+        
+        scoretitle = largeFont.render("AI Score:", True, white)
+        scoretitleRect = scoretitle.get_rect()
+        scoretitleRect = pygame.Rect((w + 5) * tile_size, 5 * tile_size, (leftover * 10), titleH)
+        screen.blit(scoretitle, scoretitleRect)
+        score = largeFont.render(str(snake.food_count), True, white)
+        scoreRect = score.get_rect()
+        scoreRect = pygame.Rect((w + 5) * tile_size, 10 * tile_size, (leftover * 10), titleH)
+        screen.blit(score, scoreRect)
+
+        # Check game over
+        if eval_env.current_time_step().is_last():
+            # Show game over title
+            game_over = largeFont.render("Game Over", True, white)
+            goRect = game_over.get_rect()
+            goRect.center = ((width / 3), titleH)
+            screen.blit(game_over, goRect)
+            # Draw back button
+            pygame.draw.rect(screen, white, backButton)
+            screen.blit(back, backRect)
+            
+            # Check if button is clicked
+            click, _, _= pygame.mouse.get_pressed()
+            if click == 1:
+                mouse = pygame.mouse.get_pos()
+                if backButton.collidepoint(mouse):
+                    aiGame = False
+                    homeScreen = True
+            num_episodes -= 1
+            if num_episodes > 0:
+                time_step = eval_env.reset()
+        else:
+            action_step = policy.action(time_step)
+            time_step = eval_env.step(action_step.action)
 
     elif tronGame is True:
         pass       

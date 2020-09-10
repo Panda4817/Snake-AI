@@ -4,7 +4,7 @@ Implementation of various concepts learned from CS50AI course to create a progra
 
 ## Requirements
 
-Run `sudo apt-get install -y xvfb ffmpeg` first. Then install required packages via `pip install -r requirements.txt` or install one package at a time: pygame, numpy, tensorflow dn tf-agent.
+Run `sudo apt-get install -y xvfb ffmpeg` first. Then install required packages via `pip install -r requirements.txt` or install one package at a time: pygame, numpy, tensorflow, tf-agent and gym==0.10.11.
 
 ## Usage
 
