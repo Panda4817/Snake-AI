@@ -9,6 +9,12 @@ pygame.init()
 size = width, height = 1750, 750
 screen = pygame.display.set_mode(size)
 
+# Initialise board width, height and tile size
+tile_size = 10
+leftover = 25
+h = int(height / tile_size)
+w = int((width - (leftover * tile_size)) / tile_size)
+
 
 # Colors
 black = (0, 0, 0)
@@ -19,9 +25,12 @@ blue = (0, 0, 255)
 yellow = (255, 255, 0)
 
 # Fonts
-largeFont = pygame.font.Font("OpenSans-Regular.ttf", 40)
-mediumFont = pygame.font.Font("OpenSans-Regular.ttf", 28)
-smallFont = pygame.font.Font("OpenSans-Regular.ttf", 18)
+largeFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.023, 0)))
+mediumFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.016, 0)))
+smallFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.01, 0)))
+
+# Initialise variables to track height of title and buttons
+titleH = 50
 
 # Game mode variables
 humanGame = False
@@ -40,14 +49,14 @@ while True:
     screen.fill(black)
 
     # Common buttons
-    backButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
+    backButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, titleH)
     back = mediumFont.render("Back", True, black)
     backRect = back.get_rect()
     backRect.center = backButton.center
 
     if homeScreen is True:
         # Setup board
-        new_board = Board()
+        new_board = Board(h=h, w=w)
         new_board.setup()
         new_board.place_food()
         
@@ -55,26 +64,26 @@ while True:
         # Draw title
         title = largeFont.render("Play Snake", True, white)
         titleRect = title.get_rect()
-        titleRect.center = ((width / 2), 50)
+        titleRect.center = ((width / 2), titleH)
         screen.blit(title, titleRect)
 
         # Draw buttons
-        humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, 50)
+        humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, titleH)
         human = mediumFont.render("Human plays Snake", True, black)
         humanRect = human.get_rect()
         humanRect.center = humanButton.center
         
-        aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, 50)
+        aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, titleH)
         ai = mediumFont.render("AI plays Snake", True, black)
         aiRect = ai.get_rect()
         aiRect.center = aiButton.center
 
-        tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, 50)
+        tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, titleH)
         tron = mediumFont.render("Tron Snake", True, black)
         tronRect = tron.get_rect()
         tronRect.center = tronButton.center
 
-        howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, 50)
+        howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, titleH)
         howToPlay = mediumFont.render("How to play", True, black)
         howToPlayRect = howToPlay.get_rect()
         howToPlayRect.center = howToPlayButton.center
@@ -117,43 +126,46 @@ while True:
         # Draw title
         title = largeFont.render("How to play", True, white)
         titleRect = title.get_rect()
-        titleRect.center = ((width / 2), 50)
+        titleRect.center = ((width / 2), titleH - leftover)
         screen.blit(title, titleRect)
 
         # Draw instructions
         texts = [
-            'Use arrow keys to control the snake: red squares.',
-            'Eat the food: green squares.',
-            'Avoid the edge and your own body.',
-            'AI trains and then plays snake. Human watches.',
-            'Human: blue snake vs AI: yellow snake.',
-            'Avoid AI snake, your own body and walls.',
-            'Eat the food: green squares.'
+            {
+                "gameTitle": 'Human plays Snake',
+                "text": [
+                    'Use arrow keys to control the snake: red squares.',
+                    'Eat the food: green squares.',
+                    'Avoid the edge and your own body.'
+                ]
+            },
+            {
+                "gameTitle": 'AI plays Snake',
+                "text": [
+                     'AI trains and then plays snake. Human watches.',
+                ]
+            },
+            {
+                "gameTitle": 'Tron Snake',
+                "text": [
+                    'Human: blue snake vs AI: yellow snake.',
+                    'Avoid AI snake, your own body and walls.',
+                    'Eat the food: green squares.'
+                ]
+            }    
         ]
-        gameTitles = [
-            'Human plays Snake',
-            'AI plays Snake',
-            'Tron Snake'
-        ]
-        for i, gameTitle in enumerate(gameTitles):
-            line = mediumFont.render(gameTitle, True, green)
-            lineRect = line.get_rect()
-            # lineRect = pygame.Rect((width / 4), ((i) / 4) * height + 70, width / 2, 10)
-            lineRect.center = ((width / 2), ((i) / 4) * height + 100)
-            screen.blit(line, lineRect)
-        for i, text in enumerate(texts):
-            line = smallFont.render(text, True, white)
-            lineRect = line.get_rect()
-            if i >= 0 and i <= 2:
-                # lineRect = pygame.Rect((width / 4), ((i + 10) / 100) * height + 20 * (i + 2), width / 2, 10)
-                lineRect.center = ((width / 2), ((i + 10) / 100) * height + 25 * (i + 2))
-            elif i == 3:
-                # lineRect = pygame.Rect((width / 4), ((i + 30) / 100) * height + 20 * i, width / 2, 10)
-                lineRect.center = ((width / 2), ((i + 30) / 100) * height + 25 * i)
-            elif i > 3:
-                # lineRect = pygame.Rect((width / 4), ((i + 50) / 100) * height + 20 * i, width / 2, 10)
-                lineRect.center = ((width / 2), ((i + 50) / 100) * height + 25 * i)
-            screen.blit(line, lineRect)
+
+        for j, text in enumerate(texts):
+            lineTitle = mediumFont.render(text['gameTitle'], True, green)
+            lineRect = lineTitle.get_rect()
+            gameTitleH = ((j / 5) * height) + titleH + leftover
+            lineRect.center = ((width / 2), gameTitleH)
+            screen.blit(lineTitle, lineRect)
+            for i, t in enumerate(text['text']):
+                line = smallFont.render(t, True, white)
+                lineRect = line.get_rect()
+                lineRect.center = ((width / 2), gameTitleH + (i * leftover) + leftover)
+                screen.blit(line, lineRect)
 
         # Draw buttons
         pygame.draw.rect(screen, white, backButton)
@@ -170,7 +182,6 @@ while True:
 
     elif humanGame is True:
         # Draw board and score
-        tile_size = 10
         tiles = []
         for i in range(new_board.height):
             row = []
@@ -189,11 +200,11 @@ while True:
         
         scoretitle = largeFont.render("Score:", True, white)
         scoretitleRect = scoretitle.get_rect()
-        scoretitleRect = pygame.Rect(155 * tile_size, 5 * tile_size, 250, 100)
+        scoretitleRect = pygame.Rect((w + 5) * tile_size, 5 * tile_size, (leftover * 10), titleH)
         screen.blit(scoretitle, scoretitleRect)
         score = largeFont.render(str(snake.food_count), True, white)
         scoreRect = score.get_rect()
-        scoreRect = pygame.Rect(155 * tile_size, 10 * tile_size, 250, 100)
+        scoreRect = pygame.Rect((w + 5) * tile_size, 10 * tile_size, (leftover * 10), titleH)
         screen.blit(score, scoreRect)
         
         # Check game over
@@ -201,7 +212,7 @@ while True:
             # Show game over title
             game_over = largeFont.render("Game Over", True, white)
             goRect = game_over.get_rect()
-            goRect.center = ((width / 3), 50)
+            goRect.center = ((width / 3), titleH)
             screen.blit(game_over, goRect)
             # Draw back button
             pygame.draw.rect(screen, white, backButton)

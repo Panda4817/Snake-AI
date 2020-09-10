@@ -1,6 +1,19 @@
 import random
 
 import numpy as np
+import tensorflow as tf
+
+from tf_agents.agents.dqn import dqn_agent
+from tf_agents.drivers import dynamic_step_driver
+from tf_agents.environments import suite_gym
+from tf_agents.environments import tf_py_environment
+from tf_agents.eval import metric_utils
+from tf_agents.metrics import tf_metrics
+from tf_agents.networks import q_network
+from tf_agents.policies import random_tf_policy
+from tf_agents.replay_buffers import tf_uniform_replay_buffer
+from tf_agents.trajectories import trajectory
+from tf_agents.utils import common
 
 class Board():
 
@@ -8,9 +21,9 @@ class Board():
     food = "food"
     snake = 'snake'
 
-    def __init__(self):
-        self.width = 150
-        self.height = 75
+    def __init__(self, h, w):
+        self.width = w
+        self.height = h
         self.structure = np.full((self.height, self.width), None)
         self.wall_cells = []
         self.food_cell = None
@@ -66,7 +79,7 @@ class Snake():
         head = board.food_cell
         while (head == board.food_cell):
             random_i = random.randint(1, board.height - 2)
-            random_j = random.randint(1, board.width - 50)
+            random_j = random.randint(1, board.width - 3)
             head = (random_i, random_j)
         self.head_location = head
         self.tail_location = None
