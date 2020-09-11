@@ -5,11 +5,11 @@ import time
 import numpy as np
 
 from snake import *
-from snake_ai import *
+from snake_ai_q import *
 
 # Initialise Pygame
 pygame.init()
-size = width, height = 1750, 750
+size = width, height = 600, 400
 screen = pygame.display.set_mode(size)
 
 # Initialise board width, height and tile size
@@ -46,10 +46,12 @@ new_board = Board(h=h, w=w)
 snake = Snake()
 
 # ai variables
-num_episodes = 3
-time_step = eval_env.reset()
-policy = saved_policy
-
+player = PlayerAI()
+current_board = None
+action = None
+next_board = None
+current_cell = None
+train_num = 10000
 
 while True:
 
@@ -114,9 +116,7 @@ while True:
                 humanGame = True
                 homeScreen = False
             elif aiButton.collidepoint(mouse):
-                # Set up training and evaluating environment
-                time_step = eval_env.reset()
-                num_episodes = 3
+                snake.reset(new_board)
                 time.sleep(0.2)
                 aiGame = True
                 homeScreen = False
@@ -285,9 +285,11 @@ while True:
         scoreRect = score.get_rect()
         scoreRect = pygame.Rect((w + 5) * tile_size, 10 * tile_size, (leftover * 10), titleH)
         screen.blit(score, scoreRect)
-
-        # Check game over
-        if eval_env.current_time_step().is_last():
+        
+        
+        if snake.check_game_status(new_board):
+            player.update(current_board, action, next_board, -1)
+            print("end game")
             # Show game over title
             game_over = largeFont.render("Game Over", True, white)
             goRect = game_over.get_rect()
@@ -304,13 +306,28 @@ while True:
                 if backButton.collidepoint(mouse):
                     aiGame = False
                     homeScreen = True
-            num_episodes -= 1
-            if num_episodes > 0:
-                time_step = eval_env.reset()
+            train_num -= 1
+            if train_num > 0:
+                snake.reset(new_board)
         else:
-            action_step = policy.action(time_step)
-            time_step = eval_env.step(action_step.action)
-
+            if snake.check_food_status(new_board):
+                player.update(current_board, action, next_board, 1)
+                print("got food")
+            elif current_board != None and next_board != None:
+                player.update(current_board, action, next_board, 0)
+                print(action)
+            current_board = new_board.convert_to_distances(snake)
+            current_cell = current_board[snake.head_location[0]][snake.head_location[1]]
+            avoid = ['up' if snake.direction == 'down' else 'down' if snake.direction == 'up' else 'left' if snake.direction == 'right' else 'right']
+            #action = player.choose_action(current_cell, current_board, snake, new_board)
+            s = player.convert_board_tuple(current_board)
+            action = player.choose_action_q(s, avoid, epsilon=False)
+            snake.direction = action
+            snake.move_snake(new_board)
+            next_board = new_board.convert_to_distances(snake)
+            current_cell = current_board[snake.head_location[0]][snake.head_location[1]]
+            
+       
     elif tronGame is True:
         pass       
 

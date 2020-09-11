@@ -1,13 +1,13 @@
 import random
 
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 
-from tf_agents.environments import py_environment
-from tf_agents.specs import array_spec
-from tf_agents.trajectories import time_step as ts
+# from tf_agents.environments import py_environment
+# from tf_agents.specs import array_spec
+# from tf_agents.trajectories import time_step as ts
 
-tf.compat.v1.enable_v2_behavior()
+# tf.compat.v1.enable_v2_behavior()
 
 class Board():
 
@@ -51,6 +51,22 @@ class Board():
             for cell in snake.middle_cells:
                 self.structure[cell[0]][cell[1]] = self.snake
         return True
+    
+    def convert_to_distances(self, snake):
+        ls = []
+        for i in range(self.height):
+            row = []
+            for j in range(self.width):
+                if self.structure[i][j] == self.wall:
+                    row.append(11251)
+                elif self.structure[i][j] == self.snake and (i, j) != snake.head_location:
+                    row.append(11251)
+                elif self.structure[i][j] == self.food:
+                    row.append(0)
+                else:
+                    row.append(abs(i - self.food_cell[0]) + abs(j - self.food_cell[1]))
+            ls.append(row)
+        return ls
 
 
 class Snake():
@@ -99,10 +115,10 @@ class Snake():
         return True
     
     def move_snake(self, board):
-        if self.tail_location == None:
+        if self.length == 1:
             self.move_head(board)
             return True
-        elif self.length <= 2:
+        elif self.length == 2:
             self.tail_location = self.head_location
             self.move_head(board)
             return True
@@ -121,7 +137,7 @@ class Snake():
             board.place_food()
             if self.tail_location == None:
                 self.tail_location = self.head_location
-            elif self.length <= 2:
+            elif self.length == 2:
                 self.middle_cells.append(self.head_location)
             else:
                 self.middle_cells.insert(0, self.head_location)
@@ -138,63 +154,75 @@ class Snake():
                 return True
         return False
     
+    
+    """ 
     def check_distances(self, env, distances, direction):
-        current = 0
-        new = 0
+        current = None
+        new = None
+        on_wall_body = False
         tp = list(self.head_location)
         if direction == self.up:
             tp[0] -= 1
-        elif direction == self.down:
+        if direction == self.down:
             tp[0] += 1
-        elif direction == self.right:
+        if direction == self.right:
             tp[1] += 1
-        elif direction == self.left:
+        if direction == self.left:
             tp[1] -= 1
-        for index, d in zip(np.ndindex(env._board.height, env._board.width), distances):
-            if self.head_location == index:
-                current = d
-            if index == tuple(tp):
-                new = d
-        if new <= current and new >= 0:
+        new_tp = tuple(tp)
+        for i in range(env._board.height):
+            for j in range(env._board.width):
+                if self.head_location == (i, j):
+                    current = distances[i][j]
+                if new_tp == (i, j):
+                    new = distances[i][j]
+                    if (i, j) in env._board.wall_cells or (i, j) in self.middle_cells:
+                        on_wall_body = True
+        
+        if new is not None and new <= current and on_wall_body == False:
             return True
 
         return False
     
     def is_action_valid(self, env, action, distances):
-        valid_move = True
+        valid_move = "NOT VALID"
 
         if action == 0:
             if (self.length > 1 and self.direction != self.down) or (self.length == 1):
                 if self.check_distances(env, distances, self.up):
                     self.direction = self.up
+                    valid_move = "EFFECTIVE"
                 else:
-                    valid_move = False
-            elif self.length > 1 and self.direction == self.down:
-                valid_move = False
+                    if self.check_game_status(env._board) == False:
+                        self.direction = self.up
+                        valid_move = "NOT EFFECTIVE"
         elif action == 1:
             if (self.length > 1 and self.direction != self.up) or (self.length == 1):
                 if self.check_distances(env, distances, self.down):
                     self.direction = self.down
+                    valid_move = "EFFECTIVE"
                 else:
-                    valid_move = False
-            elif self.length > 1 and self.direction == self.up:
-                valid_move = False
+                    if self.check_game_status(env._board) == False:
+                        self.direction = self.down
+                        valid_move = "NOT EFFECTIVE"
         elif action == 2:
             if (self.length > 1 and self.direction != self.left) or (self.length == 1):
                 if self.check_distances(env, distances, self.right):
+                    valid_move = "EFFECTIVE"
                     self.direction = self.right
                 else:
-                    valid_move = False
-            elif self.length > 1 and self.direction == self.left:
-                valid_move = False
+                    if self.check_game_status(env._board) == False:
+                        self.direction = self.right
+                        valid_move = "NOT EFFECTIVE"
         elif action == 3:
             if (self.length > 1 and self.direction != self.right) or (self.length == 1):
                 if self.check_distances(env, distances, self.down):
+                    valid_move = "EFFECTIVE"
                     self.direction = self.left
                 else:
-                    valid_move = False
-            elif self.length > 1 and self.direction == self.right:
-                valid_move = False
+                    if self.check_game_status(env._board) == False:
+                        self.direction = self.left
+                        valid_move = "NOT EFFECTIVE"
 
         return valid_move
 
@@ -207,6 +235,7 @@ class SnakeAiEnvironment(py_environment.PyEnvironment):
     def __init__(self, snake, board):
         self._snake = snake
         self._board = board
+        self._episode_ended = False
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(),
             dtype=np.dtype('int32'),
@@ -215,9 +244,10 @@ class SnakeAiEnvironment(py_environment.PyEnvironment):
             name='action'
         )
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(1, self._board.width * self._board.height),
+            # shape=(1, self._board.width * self._board.height),
+            shape=(self._board.height, self._board.width),
             dtype=np.dtype('int32'),
-            minimum=-11250,
+            minimum=0,
             maximum=11251,
             name='observation'
         )
@@ -230,41 +260,39 @@ class SnakeAiEnvironment(py_environment.PyEnvironment):
     
     def _reset(self):
         self._snake.reset(self._board)
+        self._episode_ended = False
         return ts.restart(np.array(self.__state_to_observation(), dtype=np.dtype('int32')))
 
     def __state_to_observation(self):
         ls = []
-        for index in np.ndindex(self._board.height, self._board.width):
-            if self._board.structure[index[0]][index[1]] == self._board.wall:
-                ls.append(11251)
-            elif self._board.structure[index[0]][index[1]] == self._board.snake:
-                ls.append(11251)
-            elif self._board.structure[index[0]][index[1]] == self._board.food:
-                ls.append(0)
-            else:
-                ls.append(abs(index[0]-self._board.food_cell[0]) + abs(index[1]-self._board.food_cell[1]))
-        return [ls]
+        for i in range(self._board.height):
+            row = []
+            for j in range(self._board.width):
+                if self._board.structure[i][j] == self._board.wall:
+                    row.append(11251)
+                elif self._board.structure[i][j] == self._board.snake and (i, j) != self._snake.head_location:
+                    row.append(11251)
+                elif self._board.structure[i][j] == self._board.food:
+                    row.append(0)
+                else:
+                    row.append(abs(i-self._board.food_cell[0]) + abs(j-self._board.food_cell[1]))
+            ls.append(row)
+        return ls
     
     def _step(self, action):
-        if self._snake.check_game_status(self._board):
+        if  self._episode_ended == True or self._snake.food_count >= 10:
+            print(f"game ended, {self._snake.food_count}")
             return self._reset()
         
         distances = self.__state_to_observation()
-        result = self._snake.is_action_valid(self, action, distances[0])
-
-        if result == True:
+        result = self._snake.is_action_valid(self, action, distances)
+        if result == "EFFECTIVE":
             self._snake.move_snake(self._board)
-            if self._snake.check_game_status(self._board):
-                return ts.termination(np.array(
-                    self.__state_to_observation(), 
-                    dtype=np.dtype('int32')), 
-                    reward=-1.0
-                )
-            elif self._snake.check_food_status(self._board):
+            if self._snake.check_food_status(self._board) == True:
                 return ts.transition(np.array(
                     self.__state_to_observation(), 
                     dtype=np.dtype('int32')), 
-                    reward=1.0,
+                    reward=2.0,
                 )
             else:
                 return ts.transition(np.array(
@@ -272,12 +300,21 @@ class SnakeAiEnvironment(py_environment.PyEnvironment):
                     dtype=np.dtype('int32')), 
                     reward=0,
                 )
-        else:
-            return ts.termination(np.array(
+        elif result == "NOT EFFECTIVE":
+            self._snake.move_snake(self._board)
+            return ts.transition(np.array(
                 self.__state_to_observation(), 
                 dtype=np.dtype('int32')), 
                 reward=-1.0
             )
+        else:
+            self._episode_ended = True
+            return ts.termination(np.array(
+                self.__state_to_observation(), 
+                dtype=np.dtype('int32')), 
+                reward=-2.0
+            )
+"""
 
 
 

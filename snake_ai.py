@@ -27,33 +27,37 @@ tf.compat.v1.enable_v2_behavior()
 
 tempdir = os.getenv("TEST_TMPDIR", tempfile.gettempdir())
 
-collect_steps_per_iteration = 100
+collect_steps_per_iteration = 1000
 replay_buffer_capacity = 100000
 
 fc_layer_params = (100,)
 
-batch_size = 64
+batch_size = 100
 learning_rate = 1e-3
 log_interval = 5
 
 num_eval_episodes = 10
 eval_interval = 1000
 
-width, height = 1750, 750
 # Initialise board width, height and tile size
+width, height = 1750, 750
 tile_size = 10
 leftover = 25
 h = int(height / tile_size)
 w = int((width - (leftover * tile_size)) / tile_size)
 
-board = Board(h=h, w=w)
-snake = Snake()
+# Initialise AI board and snake
+boardAi = Board(h=h, w=w)
+snakeAi = Snake()
+snakeAi.reset(boardAi)
 
-environment = SnakeAiEnvironment(snake, board)
-utils.validate_py_environment(environment, episodes=1)
+environment = SnakeAiEnvironment(snakeAi, boardAi)
+# print("validating")
+# utils.validate_py_environment(environment, episodes=1)
 train_env = tf_py_environment.TFPyEnvironment(environment)
 eval_env = tf_py_environment.TFPyEnvironment(environment)
 
+print("creating network")
 q_net = q_network.QNetwork(
     train_env.observation_spec(),
     train_env.action_spec(),
@@ -63,6 +67,7 @@ optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
 
 global_step = tf.compat.v1.train.get_or_create_global_step()
 
+print("creating agent")
 agent = dqn_agent.DqnAgent(
     train_env.time_step_spec(),
     train_env.action_spec(),
@@ -72,6 +77,7 @@ agent = dqn_agent.DqnAgent(
     train_step_counter=global_step)
 agent.initialize()
 
+print("setting up buffer")
 replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
     data_spec=agent.collect_data_spec,
     batch_size=train_env.batch_size,
@@ -84,10 +90,12 @@ collect_driver = dynamic_step_driver.DynamicStepDriver(
     num_steps=collect_steps_per_iteration)
 
 # Initial data collection
+print("collecting initial data")
 collect_driver.run()
 
 # Dataset generates trajectories with shape [BxTx...] where
 # T = n_step_update + 1.
+print("dataset generates trajectories")
 dataset = replay_buffer.as_dataset(
     num_parallel_calls=3, sample_batch_size=batch_size,
     num_steps=2).prefetch(3)
@@ -109,7 +117,8 @@ def train_one_iteration():
     iteration = agent.train_step_counter.numpy()
     print ('iteration: {0} loss: {1}'.format(iteration, train_loss.loss))
 
-checkpoint_dir = os.path.join(tempdir, 'checkpoint')
+print("setting up checkpoint and policy saver")
+checkpoint_dir = os.path.join(tempdir, 'checkpoint5')
 train_checkpointer = common.Checkpointer(
     ckpt_dir=checkpoint_dir,
     max_to_keep=1,
@@ -122,8 +131,9 @@ train_checkpointer = common.Checkpointer(
 policy_dir = os.path.join(tempdir, 'policy')
 tf_policy_saver = policy_saver.PolicySaver(agent.policy)
 
-print('Training one iteration....')
-train_one_iteration()
+for i in range(10):
+    print('Training one iteration....')
+    train_one_iteration()
 
 train_checkpointer.save(global_step)
 
