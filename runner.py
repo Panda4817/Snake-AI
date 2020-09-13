@@ -9,7 +9,7 @@ from snake_ai_q import *
 
 # Initialise Pygame
 pygame.init()
-size = width, height = 600, 400
+size = width, height = 700, 500
 screen = pygame.display.set_mode(size)
 
 # Initialise board width, height and tile size
@@ -51,7 +51,8 @@ current_board = None
 action = None
 next_board = None
 current_cell = None
-train_num = 10000
+next_cell = None
+previous_moves = []
 
 while True:
 
@@ -287,9 +288,8 @@ while True:
         screen.blit(score, scoreRect)
         
         
-        if snake.check_game_status(new_board):
-            player.update(current_board, action, next_board, -1)
-            print("end game")
+        if snake.check_game_status(new_board) or snake.direction == None:
+            player.update(current_cell, action, next_cell, -1)
             # Show game over title
             game_over = largeFont.render("Game Over", True, white)
             goRect = game_over.get_rect()
@@ -306,26 +306,56 @@ while True:
                 if backButton.collidepoint(mouse):
                     aiGame = False
                     homeScreen = True
-            train_num -= 1
-            if train_num > 0:
-                snake.reset(new_board)
         else:
             if snake.check_food_status(new_board):
-                player.update(current_board, action, next_board, 1)
-                print("got food")
-            elif current_board != None and next_board != None:
-                player.update(current_board, action, next_board, 0)
-                print(action)
+                player.update(current_cell, action, next_cell, 0.7)
+            elif current_cell != None and next_cell != None:
+                if action == 'up' and next_cell[0] > current_cell[0]:
+                    player.update(current_cell, action, next_cell, -0.2)
+                elif action == 'down' and next_cell[0] < current_cell[0]:
+                    player.update(current_cell, action, next_cell, -0.2)
+                elif action == 'left' and next_cell[1] > current_cell[1]:
+                    player.update(current_cell, action, next_cell, -0.2)
+                elif action == 'right' and next_cell[1] < current_cell[1]:
+                    player.update(current_cell, action, next_cell, -0.2)
+                else:
+                    player.update(current_cell, action, next_cell, 0.1)
+            
             current_board = new_board.convert_to_distances(snake)
             current_cell = current_board[snake.head_location[0]][snake.head_location[1]]
-            avoid = ['up' if snake.direction == 'down' else 'down' if snake.direction == 'up' else 'left' if snake.direction == 'right' else 'right']
-            #action = player.choose_action(current_cell, current_board, snake, new_board)
-            s = player.convert_board_tuple(current_board)
-            action = player.choose_action_q(s, avoid, epsilon=False)
+            avoid = []
+            if snake.length > 1:
+                if snake.direction == 'up':
+                    avoid.append('down')
+                elif snake.direction == 'down':
+                    avoid.append('up')
+                elif snake.direction == 'left':
+                    avoid.append('right')
+                else:
+                    avoid.append('left')
+            if (snake.head_location[0] - 1, snake.head_location[1]) in new_board.wall_cells or (snake.head_location[0] - 1, snake.head_location[1]) in snake.middle_cells:
+                avoid.append('up')
+            if (snake.head_location[0] + 1, snake.head_location[1]) in new_board.wall_cells or (snake.head_location[0] + 1, snake.head_location[1]) in snake.middle_cells:
+                avoid.append('down')
+            if (snake.head_location[0], snake.head_location[1] - 1) in new_board.wall_cells or (snake.head_location[0], snake.head_location[1] - 1) in snake.middle_cells:
+                avoid.append('left')
+            if (snake.head_location[0], snake.head_location[1] + 1) in new_board.wall_cells or (snake.head_location[0], snake.head_location[1] + 1) in snake.middle_cells:
+                avoid.append('right')
+
+
+            action = player.choose_action(current_cell, current_board, avoid, previous_moves, snake, new_board)
+            # action = player.choose_action_q(current_cell, avoid)
             snake.direction = action
-            snake.move_snake(new_board)
+            if action != None:
+                if len(previous_moves) < 10:
+                    previous_moves.append(action)
+                else:
+                    previous_moves.clear()
+                snake.move_snake(new_board)
+
+            
             next_board = new_board.convert_to_distances(snake)
-            current_cell = current_board[snake.head_location[0]][snake.head_location[1]]
+            next_cell = next_board[snake.head_location[0]][snake.head_location[1]]
             
        
     elif tronGame is True:

@@ -57,14 +57,10 @@ class Board():
         for i in range(self.height):
             row = []
             for j in range(self.width):
-                if self.structure[i][j] == self.wall:
-                    row.append(11251)
-                elif self.structure[i][j] == self.snake and (i, j) != snake.head_location:
-                    row.append(11251)
-                elif self.structure[i][j] == self.food:
-                    row.append(0)
+                if self.structure[i][j] == self.food:
+                    row.append((0, 0))
                 else:
-                    row.append(abs(i - self.food_cell[0]) + abs(j - self.food_cell[1]))
+                    row.append(((i - self.food_cell[0]), (j - self.food_cell[1])))
             ls.append(row)
         return ls
 
