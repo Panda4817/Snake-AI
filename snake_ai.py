@@ -40,9 +40,9 @@ num_eval_episodes = 10
 eval_interval = 1000
 
 # Initialise board width, height and tile size
-width, height = 1750, 750
+width, height = 600, 400
 tile_size = 10
-leftover = 25
+leftover = 20
 h = int(height / tile_size)
 w = int((width - (leftover * tile_size)) / tile_size)
 

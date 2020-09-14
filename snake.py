@@ -1,13 +1,14 @@
 import random
+import math
 
 import numpy as np
-# import tensorflow as tf
+#import tensorflow as tf
 
-# from tf_agents.environments import py_environment
-# from tf_agents.specs import array_spec
-# from tf_agents.trajectories import time_step as ts
+#from tf_agents.environments import py_environment
+#from tf_agents.specs import array_spec
+#from tf_agents.trajectories import time_step as ts
 
-# tf.compat.v1.enable_v2_behavior()
+#tf.compat.v1.enable_v2_behavior()
 
 class Board():
 
@@ -21,11 +22,21 @@ class Board():
         self.structure = np.full((self.height, self.width), None)
         self.wall_cells = []
         self.food_cell = None
+        self.ai_board = []
+        
+        inf = float('inf')
+        for i in range(self.height):
+            row = []
+            for j in range(self.width):
+                row.append([0, inf, inf, inf, -1, -1])
+            self.ai_board.append(row)
 
         for index in np.ndindex(self.height, self.width):
             if index[0] == 0 or index[0] == (self.height - 1) or index[1] == 0 or index[1] == (self.width - 1):
                 self.structure[index[0]][index[1]] = self.wall
                 self.wall_cells.append((index[0], index[1]))
+                self.ai_board[index[0]][index[1]][0] = 1
+        
         
     def place_food(self):
         if self.food_cell != None:
@@ -45,14 +56,18 @@ class Board():
         for index in np.ndindex(self.height, self.width):
             if self.structure[index[0]][index[1]] == self.snake:
                 self.structure[index[0]][index[1]] = None
+                self.ai_board[index[0]][index[1]][0] = 0
         self.structure[snake.head_location[0]][snake.head_location[1]] = self.snake
         if snake.length > 1:
             self.structure[snake.tail_location[0]][snake.tail_location[1]] = self.snake
+            self.ai_board[snake.tail_location[0]][snake.tail_location[1]][0] = 1
             for cell in snake.middle_cells:
                 self.structure[cell[0]][cell[1]] = self.snake
+                self.ai_board[cell[0]][cell[1]][0] = 1
         return True
     
-    def convert_to_distances(self, snake):
+    """
+    def convert_to_distances_to_food(self, snake):
         ls = []
         for i in range(self.height):
             row = []
@@ -63,7 +78,7 @@ class Board():
                     row.append(((i - self.food_cell[0]), (j - self.food_cell[1])))
             ls.append(row)
         return ls
-
+    """
 
 class Snake():
     up = "up"
@@ -76,6 +91,7 @@ class Snake():
         self.direction = self.right
         self.head_location = None
         self.tail_location = None
+        self.goal_tail = None
         self.middle_cells = []
         self.food_count = 0
     
@@ -89,6 +105,7 @@ class Snake():
         self.head_location = head
         self.middle_cells = []
         self.tail_location = None
+        self.goal_tail = head
         self.length = 1
         self.direction = self.right
         self.food_count = 0
@@ -150,8 +167,13 @@ class Snake():
                 return True
         return False
     
+    def update_goal_tail(self):
+        if self.head_location == self.goal_tail:
+            self.goal_tail = self.tail_location
+            return True
+        return False
     
-    """ 
+    """
     def check_distances(self, env, distances, direction):
         current = None
         new = None

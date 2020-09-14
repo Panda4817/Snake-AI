@@ -1,6 +1,8 @@
 import random
 from operator import itemgetter, attrgetter
 
+import numpy as np
+
 from snake import *
 
 class PlayerAI():
@@ -9,6 +11,7 @@ class PlayerAI():
         self.q = dict()
         self.alpha = alpha
         self.epsilon = epsilon
+        self.directions = ['up', 'down', 'left', 'right']
 
     def convert_board_tuple(self, d):
         t = tuple(tuple(i) for i in d)
@@ -130,125 +133,143 @@ class PlayerAI():
         a = random.choice(best)
         return a["action"]
     
-    def order_directions(self, current_cell, current_board, snake, board):
-        d = ['up', 'down', 'left', 'right']
-        directions = []
-        if current_cell[1] != abs(current_cell[1]):
-            dx = d[3]
-            otherx = d[2]
-        else:
-            dx = d[2]
-            otherx = d[3]
-        if current_cell[0] != abs(current_cell[0]):
-            dy = d[0]
-            othery = d[1]
-        else:
-            dy = d[1]
-            othery = d[0]
-        yNum = 0
-        xNum = 0
-        for i in range(snake.head_location[0], board.food_cell[0] + 1):
-            if (i, snake.head_location[1]) in snake.middle_cells:
-                yNum += 1
-        for i in range(snake.head_location[1], board.food_cell[1] + 1):
-            if (snake.head_location[0], i) in snake.middle_cells:
-                xNum += 1
+    def get_avoid_cells(self, snake, board):
+        avoid = []
+        if snake.length > 1:
+            if snake.direction == 'up':
+                avoid.append('down')
+            elif snake.direction == 'down':
+                avoid.append('up')
+            elif snake.direction == 'left':
+                avoid.append('right')
+            else:
+                avoid.append('left')
+        if (snake.head_location[0] - 1, snake.head_location[1]) in board.wall_cells or (snake.head_location[0] - 1, snake.head_location[1]) in snake.middle_cells:
+            avoid.append('up')
+        if (snake.head_location[0] + 1, snake.head_location[1]) in board.wall_cells or (snake.head_location[0] + 1, snake.head_location[1]) in snake.middle_cells:
+            avoid.append('down')
+        if (snake.head_location[0], snake.head_location[1] - 1) in board.wall_cells or (snake.head_location[0], snake.head_location[1] - 1) in snake.middle_cells:
+            avoid.append('left')
+        if (snake.head_location[0], snake.head_location[1] + 1) in board.wall_cells or (snake.head_location[0], snake.head_location[1] + 1) in snake.middle_cells:
+            avoid.append('right')
         
-        if yNum > xNum:
-            directions.extend([dx, otherx, othery, dy])
-        elif xNum > yNum:
-            directions.extend([dy, othery, otherx, dx])
-        elif yNum == xNum:
-            directions.extend([othery, otherx, dy, dx])
-        else:
-            directions.extend([dy, othery, otherx, dx])
-        return directions 
+        return avoid
+    
+    def get_available_actions(self, avoid):
+        a = []
+        for i in self.directions:
+            if i not in avoid:
+                a.append(i)
+        return a
 
+    def get_manhattan_distances(self, actions, current_board, snake):
+        a_d = []
+        for a in actions:
+            if a == 'up':
+                man = current_board[snake.head_location[0] - 1][snake.head_location[1]] 
+            elif a == 'down':
+                man = current_board[snake.head_location[0] + 1][snake.head_location[1]]  
+            elif a == 'left':
+                man = current_board[snake.head_location[0]][snake.head_location[1] - 1] 
+            elif a == 'right':
+                man = current_board[snake.head_location[0]][snake.head_location[1] + 1]
+            
+            a_d.append({
+                "action": a,
+                "man": abs(man[0]) + abs(man[1])
+            })
+        return a_d
+    
+    def near_edge_action(self, _next, snake, board):
+        for index in np.ndindex(board.height, board.width):
+            if _next == 'vertical':
+                if index[0] >= 1 and index[0] < int(round(((board.height - 2) / 2), 0)):
+                    if snake.head_location == index:
+                        return 'down'
+                if index[0] <= (board.height - 2) and index[0] >= int(round(((board.height - 2) / 2), 0)):
+                    if snake.head_location == index:
+                        return 'up'
+            elif _next == "horizontal":
+                if index[1] >= 1 and index[1] < int(round(((board.width - 2) / 2), 0)):
+                    if snake.head_location == index:
+                        return 'right'
+                if index[1] <= (board.width - 2) and index[1] >= int(round(((board.width - 2) / 2), 0)):
+                    if snake.head_location == index:
+                        return 'left'
+    
+    def x_y(self, direction):
+        y, x = 0, 0
+        if direction == self.directions[0]:
+            y = -1
+        elif direction == self.directions[1]:
+            y = 1
+        elif direction == self.directions[2]:
+            x = -1
+        elif direction == self.directions[3]:
+            x = 1
+        
+        return y, x
+    
+    def clear_path_check(self, num, snake, direction, board):
+        y, x = self.x_y(direction)
+        hit = False
+        path = 0
+        while (path != num):
+            path += 1
+            index = [snake.head_location[0] + y, snake.head_location[1] + y]
+            if tuple(index) in snake.middle_cells or tuple(index) in board.wall_cells:
+                hit = True
+        
+        return hit
+                
+    def snake_length_low(self, goal, actions, previous_moves, manhattan, snake, board):
+        if goal == "food" or snake.length == 1:
+            if snake.length > 20:
+                for a in actions:
+                    if self.clear_path_check(snake.length, snake, a, board) == False:
+                        return a
+            lowest = sorted(manhattan, key=itemgetter('man'))
+            try:
+                return lowest[0]["action"]
+            except:
+                return None
+        elif goal == "tail":
+            for k, v in previous_moves.items():
+                if v > 0:
+                    if k == self.directions[0]:
+                        if self.directions[1] in actions and self.clear_path_check(v, snake, self.directions[1], board) == False:
+                            return self.directions[1]
+                        elif self.directions[0] in actions and self.clear_path_check(v, snake, self.directions[0], board) == False:
+                            return self.directions[0]
+                    elif k == self.directions[1]:
+                        if self.directions[0] in actions and self.clear_path_check(v, snake, self.directions[0], board) == False:
+                            return self.directions[0]
+                        elif self.directions[1] in actions and self.clear_path_check(v, snake, self.directions[1], board) == False:
+                            return self.directions[1]
+                    elif k == self.directions[2]:
+                        if self.directions[3] in actions and self.clear_path_check(v, snake, self.directions[3], board) == False:
+                            return self.directions[3]
+                        elif self.directions[2] in actions and self.clear_path_check(v, snake, self.directions[2], board) == False:
+                            return self.directions[2]
+                    elif k == self.directions[3]:
+                        if self.directions[2] in actions and self.clear_path_check(v, snake, self.directions[2], board) == False:
+                            return self.directions[2]
+                        elif self.directions[3] in actions and self.clear_path_check(v, snake, self.directions[3], board) == False:
+                            return self.directions[3]
+                    continue
+            snake.goal_tail = snake.head_location
+
+    
+    def choose_action(self, current_cell, current_board, avoid, previous_moves, goal, snake, board):
+        actions = self.get_available_actions(avoid) 
+        manhattan = self.get_manhattan_distances(actions, current_board, snake)
+        if snake.length < board.width and snake.length < board.height:
+            return self.snake_length_low(goal, actions, previous_moves, manhattan, snake, board)
+        else:
+            return None
+
+    """
     def check_for_body(self, directions, snake, board):
-        """
-        result = []
-        for i in directions:
-            distance = 0
-            x = 0
-            y = 0
-            stepx = 0
-            stepy = 0
-            if i == 'up':
-                y = -1
-                stepx = 1
-            elif i == 'left':
-                x = -1
-                stepy = -1
-            elif i == 'down':
-                y = 1
-                stepx = 1
-            elif i == 'right':
-                stepy = -1
-            l = list(snake.head_location)
-            start = list(snake.head_location)
-            step = False
-            endx = board.width if snake.length >= board.width else snake.length
-            endy = board.height if snake.length >= board.height else snake.length
-            while (abs(start[0] - l[0]) != endy and abs(start[1] - l[1]) != endx):
-                if step == False:
-                    l = [l[0] + y, l[1] + x]
-                else:
-                    l = [l[0] + stepy, l[1] + stepx]
-                distance += 1
-                if tuple(l) in snake.middle_cells:
-                    break
-                step = True if step == False else False
-            result.append({
-                "direction": i,
-                "distance": distance
-            })
-        for i in range(len(result)):
-            for j in range(len(result)):
-                if i != j:
-                    if result[i]["distance"] != result[j]["distance"]:
-                        return result
-        result2 = []
-        for i in directions:
-            distance = 0
-            x = 0
-            y = 0
-            stepx = 0
-            stepy = 0
-            if i == 'up':
-                y = -1
-                stepx = -1
-            elif i == 'left':
-                x = -1
-                stepy = 1
-            elif i == 'down':
-                y = 1
-                stepx = -1
-            elif i == 'right':
-                stepy = 1
-            l = list(snake.head_location)
-            start = list(snake.head_location)
-            step = False
-            endx = board.width if snake.length >= board.width else snake.length
-            endy = board.height if snake.length >= board.height else snake.length
-            while (abs(start[0] - l[0]) != endy and abs(start[1] - l[1]) != endx):
-                if step == False:
-                    l = [l[0] + y, l[1] + x]
-                else:
-                    l = [l[0] + stepy, l[1] + stepx]
-                distance += 1
-                if tuple(l) in snake.middle_cells:
-                    break
-                step = True if step == False else False
-            result2.append({
-                "direction": i,
-                "distance": distance
-            })
-        for i in range(len(result2)):
-            for j in range(len(result2)):
-                if i != j:
-                    if result2[i]["distance"] != result2[j]["distance"]:
-                        return result2
-        """
         pattern = ['up', 'left', 'down', 'right']
         result3 = []
         for i in directions:
@@ -300,7 +321,7 @@ class PlayerAI():
         # Current distance
         current = current_cell
         # Directions
-        directions = self.order_directions(current_cell, current_board, snake, board)
+        directions = ['up', 'down', 'left', 'right']
         for i in avoid:
             if i in directions:
                 directions.remove(i)    
@@ -373,7 +394,7 @@ class PlayerAI():
                 for j in range(length):
                     if i != j and t[i]['turns'] != t[j]['turns']:
                         turn_count += 1
-                    if i != j and t[i]['distance'] < 10 and t[j]['distance'] >= 100:
+                    if i != j and t[i]['distance'] < 10 and t[j]['distance'] >= 40:
                         d_count += 1
             if d_count >= 1:
                 print(other)
@@ -391,7 +412,7 @@ class PlayerAI():
 
 
                         
-        """
+   
         narrowed = []
         n_dir = []
         for i in range(len(directions)):
