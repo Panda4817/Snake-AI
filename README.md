@@ -4,11 +4,11 @@ Implementation of various concepts learned from CS50AI course to create a progra
 
 ## Requirements
 
-Run `sudo apt-get install -y xvfb ffmpeg` first. Then install required packages via `pip install -r requirements.txt` or install one package at a time: pygame, numpy, tensorflow, tf-agent and gym==0.10.11.
+Run `sudo apt-get install -y xvfb ffmpeg` first. Then install required packages via `pip install -r requirements.txt` or install one package at a time: pygame and numpy.
 
 ## Usage
 
 Run `python runner.py`. Choose between the options:
 - Human plays Snake - Normal snake with score keeping.
-- AI plays Snake - AI trains and then plays normal snake with score keeping, human watches. 
+- AI plays Snake - AI plays normal snake with score keeping, human watches. 
 - Tron Snake - Human vs AI snake. Both trying to crash the other snake into walls or own body.
