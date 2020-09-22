@@ -24,7 +24,7 @@ class Board():
                
         
         
-    def place_food(self):
+    def place_food(self, other_player_board=None):
         if self.food_cell != None:
             self.structure[self.food_cell[0]][self.food_cell[1]] = None
         found_new_food = False
@@ -35,8 +35,12 @@ class Board():
             if (random_i, random_j) in tried:
                 continue
             for index in np.ndindex(self.height, self.width):
-                if index == (random_i, random_j) and self.structure[index[0]][index[1]] != self.snake and index != self.food_cell:
-                    found_new_food = True
+                if other_player_board == None:
+                    if index == (random_i, random_j) and self.structure[index[0]][index[1]] != self.snake and index != self.food_cell:
+                        found_new_food = True
+                else:
+                    if index == (random_i, random_j) and self.structure[index[0]][index[1]] != self.snake and index != self.food_cell and other_player_board.structure[index[0]][index[1]] != other_player_board.snake:
+                        found_new_food = True
             tried.append((random_i, random_j))
             if len(tried) == (self.width - 2) * (self.height - 2):
                 self.food_cell = None
@@ -70,8 +74,11 @@ class Snake():
         self.middle_cells = []
         self.food_count = 0
     
-    def reset(self, board):
-        board.place_food()
+    def reset(self, board, food_cell=None):
+        if food_cell == None:
+            board.place_food()
+        else:
+            board.food_cell = food_cell
         head = board.food_cell
         while (head == board.food_cell):
             random_i = random.randint(1, board.height - 2)
@@ -119,22 +126,37 @@ class Snake():
             self.move_head(board)
         return True
     
-    def check_food_status(self, board):
+    def check_food_status(self, board, other_player_board=None):
         if board.food_cell == self.head_location:
             self.food_count += 1
             self.length += 1
             if self.tail_location == None:
                 self.tail_location = self.head_location
-            board.place_food()
+            board.place_food(other_player_board)
             return True
         return False
 
-    def check_game_status(self, board):
-        for cell in board.wall_cells:
-            if cell == self.head_location:
+    def check_game_status(self, board, computer=None):
+        if computer == None:
+            for cell in board.wall_cells:
+                if cell == self.head_location:
+                    return True
+            for cell in self.middle_cells:
+                if cell == self.head_location:
+                    return True
+        else:
+            for cell in board.wall_cells:
+                if cell == self.head_location or cell == computer.head_location:
+                    return True
+            for cell in self.middle_cells:
+                if cell == self.head_location or cell == computer.head_location:
+                    return True
+            for cell in computer.middle_cells:
+                if cell == computer.head_location or cell == self.head_location:
+                    return True
+            if computer.head_location == self.head_location:
                 return True
-        for cell in self.middle_cells:
-            if cell == self.head_location:
+            if computer.head_location == self.tail_location or self.head_location == computer.tail_location:
                 return True
         return False
     

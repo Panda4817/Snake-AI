@@ -133,6 +133,9 @@ class PlayerAI():
         a = random.choice(best)
         return a["action"]
     
+
+
+    """The following functions are a different implementation of AI snake which was used with q-learning."""
     def get_avoid_cells(self, snake, board):
         avoid = []
         if snake.length > 1:

@@ -9,12 +9,12 @@ from hamAI import hamiltonian_path, get_action
 
 # Initialise Pygame
 pygame.init()
-size = width, height = 1240, 840
+size = width, height = 1220, 820
 screen = pygame.display.set_mode(size)
 
 # Initialise board width, height and tile size
-tile_size = 20
-leftover = 10
+tile_size = 10
+leftover = 20
 h = int(height / tile_size)
 w = int((width - (leftover * tile_size)) / tile_size)
 
@@ -47,6 +47,10 @@ snake = Snake()
 
 # AI variables
 path = hamiltonian_path
+
+# Tron variables
+comp_board = Board(h=h, w=w)
+computer = Snake()
 
 while True:
 
@@ -116,6 +120,8 @@ while True:
                 aiGame = True
                 homeScreen = False
             elif tronButton.collidepoint(mouse):
+                snake.reset(new_board)
+                computer.reset(comp_board, new_board.food_cell)
                 time.sleep(0.2)
                 tronGame = True
                 homeScreen = False
@@ -145,7 +151,7 @@ while True:
             {
                 "gameTitle": 'AI plays Snake',
                 "text": [
-                     'AI trains and then plays snake. Human watches.',
+                     'AI plays snake. Human watches.',
                 ]
             },
             {
@@ -161,13 +167,13 @@ while True:
         for j, text in enumerate(texts):
             lineTitle = mediumFont.render(text['gameTitle'], True, green)
             lineRect = lineTitle.get_rect()
-            gameTitleH = ((j / 5) * height) + titleH + leftover
+            gameTitleH = ((j / 5) * height) + titleH + leftover + leftover
             lineRect.center = ((width / 2), gameTitleH)
             screen.blit(lineTitle, lineRect)
             for i, t in enumerate(text['text']):
-                line = smallFont.render(t, True, white)
+                line = mediumFont.render(t, True, white)
                 lineRect = line.get_rect()
-                lineRect.center = ((width / 2), gameTitleH + (i * leftover) + leftover)
+                lineRect.center = ((width / 2), gameTitleH + (i * leftover) + leftover + leftover)
                 screen.blit(line, lineRect)
 
         # Draw buttons
@@ -331,6 +337,104 @@ while True:
             action = None
        
     elif tronGame is True:
-        pass       
+        # Draw board and score
+        tiles = []
+        for i in range(new_board.height):
+            row = []
+            for j in range(new_board.width):
+                rect = pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size)
+                if (i, j) in new_board.wall_cells:
+                    pygame.draw.rect(screen, white, rect)
+                elif (i, j) == new_board.food_cell:
+                    pygame.draw.rect(screen, green, rect)
+                elif new_board.structure[i][j] == new_board.snake:
+                    pygame.draw.rect(screen, blue, rect)
+                    pygame.draw.rect(screen, white, rect, 1)
+                elif comp_board.structure[i][j] == comp_board.snake:
+                    pygame.draw.rect(screen, yellow, rect)
+                    pygame.draw.rect(screen, red, rect, 1)
+                else:
+                    pygame.draw.rect(screen, black, rect)
+                row.append(rect)
+            tiles.append(row)
+
+        aiscoretitle = mediumFont.render("AI Score:", True, white)
+        aiscoretitleRect = aiscoretitle.get_rect()
+        aiscoretitleRect = pygame.Rect((w + 2) * tile_size, 15 * tile_size, (leftover * 10), titleH)
+        screen.blit(aiscoretitle, aiscoretitleRect)
+        aiscore = largeFont.render(str(computer.food_count), True, white)
+        aiscoreRect = aiscore.get_rect()
+        aiscoreRect = pygame.Rect((w + 2) * tile_size, 20 * tile_size, (leftover * 10), titleH)
+        screen.blit(aiscore, aiscoreRect)
+
+        hscoretitle = mediumFont.render("Human Score:", True, white)
+        hscoretitleRect = hscoretitle.get_rect()
+        hscoretitleRect = pygame.Rect((w + 2) * tile_size, 5 * tile_size, (leftover * 10), titleH)
+        screen.blit(hscoretitle, hscoretitleRect)
+        hscore = largeFont.render(str(snake.food_count), True, white)
+        hscoreRect = hscore.get_rect()
+        hscoreRect = pygame.Rect((w + 2) * tile_size, 10 * tile_size, (leftover * 10), titleH)
+        screen.blit(hscore, hscoreRect)
+
+        if snake.check_game_status(new_board, computer):
+            # Show game over title
+            game_over = largeFont.render("Game Over", True, white)
+            goRect = game_over.get_rect()
+            goRect.center = ((width / 3), titleH)
+            screen.blit(game_over, goRect)
+            # Draw back button
+            pygame.draw.rect(screen, white, backButton)
+            screen.blit(back, backRect)
+            
+            # Check if button is clicked
+            click, _, _= pygame.mouse.get_pressed()
+            if click == 1:
+                mouse = pygame.mouse.get_pos()
+                if backButton.collidepoint(mouse):
+                    tronGame = False
+                    homeScreen = True
+        else:
+            # ai
+            eaten = computer.check_food_status(comp_board, new_board)
+            new_board.food_cell = comp_board.food_cell
+            if computer.head_location[1] == 2 and comp_board.food_cell[0] < computer.head_location[0] and (computer.head_location[0], computer.head_location[1] - 1) not in computer.middle_cells and (computer.head_location[0] - 1, computer.head_location[1] - 1) not in computer.middle_cells:
+                action = get_action((computer.head_location[0], computer.head_location[1] - 1), computer.head_location)
+            elif computer.head_location[1] == comp_board.width - 2 and comp_board.food_cell[0] > computer.head_location[0] and comp_board.food_cell[0] % 2 == 0 and (computer.head_location[0] + 1, computer.head_location[1]) not in computer.middle_cells and (computer.head_location[0] + 1, computer.head_location[1] - 1) not in computer.middle_cells and (computer.head_location[0] + 2, computer.head_location[1]) not in computer.middle_cells and computer.length < (((comp_board.height - 2) * (comp_board.width - 2)) / 2):
+                action = get_action((computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
+            elif computer.head_location[1] == 2 and comp_board.food_cell[0] > computer.head_location[0] and comp_board.food_cell[0] % 2 != 0 and (computer.head_location[0] + 1, computer.head_location[1]) not in computer.middle_cells and (computer.head_location[0] + 1, computer.head_location[1] + 1) not in computer.middle_cells and (computer.head_location[0] + 2, computer.head_location[1]) not in computer.middle_cells and computer.length < (((comp_board.height - 2) * (comp_board.width - 2)) / 2):
+                action = get_action((computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
+            else:
+                head_index = path.index(computer.head_location)
+                action = get_action(path[head_index + 1], computer.head_location)
+            
+            computer.direction = action
+            computer.move_snake(comp_board, eaten)
+            action = None
+
+            # human
+            eaten = snake.check_food_status(new_board, comp_board)
+            comp_board.food_cell = new_board.food_cell
+            key_states = pygame.key.get_pressed()
+            if snake.length == 1:
+                if key_states[pygame.K_UP]:
+                    snake.direction = snake.up
+                if key_states[pygame.K_DOWN]:
+                    snake.direction = snake.down
+                if key_states[pygame.K_RIGHT]:
+                    snake.direction = snake.right
+                if key_states[pygame.K_LEFT]:
+                    snake.direction = snake.left
+            else:
+                if key_states[pygame.K_UP] and snake.direction != snake.down:
+                    snake.direction = snake.up
+                elif key_states[pygame.K_DOWN] and snake.direction != snake.up:
+                    snake.direction = snake.down
+                elif key_states[pygame.K_RIGHT] and snake.direction != snake.left:
+                    snake.direction = snake.right
+                elif key_states[pygame.K_LEFT] and snake.direction != snake.right:
+                    snake.direction = snake.left
+            snake.move_snake(new_board, eaten)
+            
+
 
     pygame.display.flip()
