@@ -15,4 +15,4 @@ Run `python runner.py`. Choose between the options:
 
 ## Other Snake AI implementations
 
-Before settling on the hamiltonian cycle, I tried q-learning, neural networks using Tensorflow and A* search algorithm. All of these can be found in the `other_AI_snake_programs` directory.
+Before settling on the hamiltonian cycle, I tried Q-learning and A* search algorithms. All of these can be found in the `other_AI_snake_programs` directory.
