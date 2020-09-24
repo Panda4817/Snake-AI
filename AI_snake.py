@@ -1,9 +1,14 @@
 import numpy as np
 
+# Global variables to find path depending on board size
+# Scale board size down to find a new path
+# Therefore 80x100 would be scaled down to 4x5 board
+height = 80
+width = 100
+
+
 # A class created to find hamiltonian paths in small boards
 # Those paths can be scaled up to bigger board with the same ratio of height and width
-
-
 class Graph():
     def __init__(self, vertices):
         self.graph = [[0 for column in range(vertices)]
@@ -80,11 +85,6 @@ class Graph():
             print(vertex, end=" ")
         print(path[0], "\n")
 
-
-# Determine actual height of board
-height = 80
-width = 100
-
 """
 # To find path for 80x100 board, find a path for 4x5 and then scale it up
 height = 4
@@ -129,6 +129,7 @@ g1.graph = matrix
 # Print the solution  
 g1.hamCycle();  
 """
+# The following code creates a path suitable for the follwing board sizes
 # 4x5, 40x50, 20x25, 80x100 boards
 hamiltonian_path = []
 for i in range(1, height + 1):
@@ -150,8 +151,6 @@ for e in range(height - 1, 0, -1):
     hamiltonian_path.append((e, 1))
 
 # This function will return an action based on current cell and next cell
-
-
 def get_action(next_cell, current_cell):
     if next_cell == (current_cell[0] - 1, current_cell[1]):
         return 'up'

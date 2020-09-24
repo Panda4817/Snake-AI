@@ -5,7 +5,7 @@ import time
 import numpy as np
 
 from snake import *
-from hamAI import hamiltonian_path, get_action
+from AI_snake import hamiltonian_path, get_action
 
 # Initialise Pygame
 pygame.init()
