@@ -1,6 +1,8 @@
 # Snake AI
 
-Implementation of various concepts learned from CS50AI course to create a program that allows users to play the Snake game as normal, watch AI play Snake and play Snake against the AI Tron-style.
+A program that allows users to play the Snake game as normal, watch AI play Snake and play Snake against the AI. Before settling on the Hamiltonian Cycle for the AI snake, I tried Q-learning and A* search algorithms.
+
+![Snake AI demo](https://i.imgur.com/3TCFWi4.gif)
 
 ## Requirements
 
@@ -13,6 +15,3 @@ Run `python runner.py`. Choose between the options:
 - AI plays Snake - AI plays normal snake with score keeping, human watches. 
 - Tron Snake - Human vs AI snake. Both trying to get the most food and trying not to crash into each other or the wall.
 
-## Other Snake AI implementations
-
-Before settling on the hamiltonian cycle, I tried Q-learning and A* search algorithms.

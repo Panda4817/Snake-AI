@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Board():
-
+    """A class to define the board structure and cells"""
     wall = "wall"
     food = "food"
     snake = 'snake'
@@ -17,12 +17,14 @@ class Board():
         self.wall_cells = []
         self.food_cell = None
 
+        # Define the outer cells of the board to be walls
         for index in np.ndindex(self.height, self.width):
             if index[0] == 0 or index[0] == (self.height - 1) or index[1] == 0 or index[1] == (self.width - 1):
                 self.structure[index[0]][index[1]] = self.wall
                 self.wall_cells.append((index[0], index[1]))
 
     def place_food(self, other_player_board=None):
+        """Assign a new cell in the board as food"""
         if self.food_cell != None:
             self.structure[self.food_cell[0]][self.food_cell[1]] = None
         found_new_food = False
@@ -48,6 +50,7 @@ class Board():
         return True
 
     def update_with_snake(self, snake):
+        """Update the cells on the board to snake when snake moves"""
         for index in np.ndindex(self.height, self.width):
             if self.structure[index[0]][index[1]] == self.snake:
                 self.structure[index[0]][index[1]] = None
@@ -62,6 +65,7 @@ class Board():
 
 
 class Snake():
+    """A class to define how the snake moves and interacts with the board"""
     up = "up"
     down = "down"
     left = "left"
@@ -76,6 +80,7 @@ class Snake():
         self.food_count = 0
 
     def reset(self, board, food_cell=None):
+        """A function to reset board with snake starting position and new food cell."""
         if food_cell == None:
             board.place_food()
         else:
@@ -95,6 +100,7 @@ class Snake():
         return True
 
     def move_head(self, board):
+        """Moves the head of the snake so a new cell is assigned to head location"""
         head_list = list(self.head_location)
         if self.direction == self.up:
             head_list[0] -= 1
@@ -109,6 +115,7 @@ class Snake():
         return True
 
     def move_snake(self, board, eaten):
+        """Works with move_head to move the whole snake"""
         if self.length == 1:
             self.move_head(board)
             return True
@@ -127,6 +134,7 @@ class Snake():
         return True
 
     def check_food_status(self, board, other_player_board=None):
+        """Checks if head of the snake is in the same cell as the food"""
         if board.food_cell == self.head_location:
             self.food_count += 1
             self.length += 1
@@ -137,6 +145,8 @@ class Snake():
         return False
 
     def check_game_status(self, board, computer=None):
+        """Checks for various conditions to see if the game is over.
+        Returns true if game is over else false."""
         if computer == None:
             for cell in board.wall_cells:
                 if cell == self.head_location:
