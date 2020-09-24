@@ -3,6 +3,7 @@ import math
 
 import numpy as np
 
+
 class Board():
 
     wall = "wall"
@@ -15,15 +16,12 @@ class Board():
         self.structure = np.full((self.height, self.width), None)
         self.wall_cells = []
         self.food_cell = None
-        
 
         for index in np.ndindex(self.height, self.width):
             if index[0] == 0 or index[0] == (self.height - 1) or index[1] == 0 or index[1] == (self.width - 1):
                 self.structure[index[0]][index[1]] = self.wall
                 self.wall_cells.append((index[0], index[1]))
-               
-        
-        
+
     def place_food(self, other_player_board=None):
         if self.food_cell != None:
             self.structure[self.food_cell[0]][self.food_cell[1]] = None
@@ -44,21 +42,24 @@ class Board():
             tried.append((random_i, random_j))
             if len(tried) == (self.width - 2) * (self.height - 2):
                 self.food_cell = None
-                return False    
+                return False
         self.structure[random_i][random_j] = self.food
         self.food_cell = (random_i, random_j)
         return True
-    
+
     def update_with_snake(self, snake):
         for index in np.ndindex(self.height, self.width):
             if self.structure[index[0]][index[1]] == self.snake:
                 self.structure[index[0]][index[1]] = None
-        self.structure[snake.head_location[0]][snake.head_location[1]] = self.snake
+        self.structure[snake.head_location[0]
+                       ][snake.head_location[1]] = self.snake
         if snake.length > 1:
-            self.structure[snake.tail_location[0]][snake.tail_location[1]] = self.snake
+            self.structure[snake.tail_location[0]
+                           ][snake.tail_location[1]] = self.snake
             for cell in snake.middle_cells:
                 self.structure[cell[0]][cell[1]] = self.snake
         return True
+
 
 class Snake():
     up = "up"
@@ -73,7 +74,7 @@ class Snake():
         self.tail_location = None
         self.middle_cells = []
         self.food_count = 0
-    
+
     def reset(self, board, food_cell=None):
         if food_cell == None:
             board.place_food()
@@ -93,7 +94,6 @@ class Snake():
         board.update_with_snake(self)
         return True
 
-    
     def move_head(self, board):
         head_list = list(self.head_location)
         if self.direction == self.up:
@@ -107,7 +107,7 @@ class Snake():
         self.head_location = (head_list[0], head_list[1])
         board.update_with_snake(self)
         return True
-    
+
     def move_snake(self, board, eaten):
         if self.length == 1:
             self.move_head(board)
@@ -125,7 +125,7 @@ class Snake():
                 self.middle_cells.insert(0, self.head_location)
             self.move_head(board)
         return True
-    
+
     def check_food_status(self, board, other_player_board=None):
         if board.food_cell == self.head_location:
             self.food_count += 1
@@ -159,27 +159,3 @@ class Snake():
             if computer.head_location == self.tail_location or self.head_location == computer.tail_location:
                 return True
         return False
-    
-
-
-
-        
-
-
-    
-
-
-
-            
-
-                    
-
-            
-            
-            
-
-
-
-
-
-

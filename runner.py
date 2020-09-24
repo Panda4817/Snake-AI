@@ -27,9 +27,12 @@ blue = (0, 0, 255)
 yellow = (255, 255, 0)
 
 # Fonts
-largeFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.023, 0)))
-mediumFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.016, 0)))
-smallFont = pygame.font.Font("OpenSans-Regular.ttf", int(round(width * 0.01, 0)))
+largeFont = pygame.font.Font(
+    "OpenSans-Regular.ttf", int(round(width * 0.023, 0)))
+mediumFont = pygame.font.Font(
+    "OpenSans-Regular.ttf", int(round(width * 0.016, 0)))
+smallFont = pygame.font.Font(
+    "OpenSans-Regular.ttf", int(round(width * 0.01, 0)))
 
 # Initialise variables to track height of title and buttons
 titleH = 50
@@ -57,7 +60,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-        
+
     screen.fill(black)
 
     # Common buttons
@@ -75,26 +78,30 @@ while True:
         screen.blit(title, titleRect)
 
         # Draw buttons
-        humanButton = pygame.Rect((width / 4), (1 / 5) * height, width / 2, titleH)
+        humanButton = pygame.Rect(
+            (width / 4), (1 / 5) * height, width / 2, titleH)
         human = mediumFont.render("Human plays Snake", True, black)
         humanRect = human.get_rect()
         humanRect.center = humanButton.center
-        
-        aiButton = pygame.Rect((width / 4), (2 / 5) * height, width / 2, titleH)
+
+        aiButton = pygame.Rect((width / 4), (2 / 5) *
+                               height, width / 2, titleH)
         ai = mediumFont.render("AI plays Snake", True, black)
         aiRect = ai.get_rect()
         aiRect.center = aiButton.center
 
-        tronButton = pygame.Rect((width / 4), (3 / 5) * height, width / 2, titleH)
+        tronButton = pygame.Rect(
+            (width / 4), (3 / 5) * height, width / 2, titleH)
         tron = mediumFont.render("Tron Snake", True, black)
         tronRect = tron.get_rect()
         tronRect.center = tronButton.center
 
-        howToPlayButton = pygame.Rect((width / 4), (4 / 5) * height, width / 2, titleH)
+        howToPlayButton = pygame.Rect(
+            (width / 4), (4 / 5) * height, width / 2, titleH)
         howToPlay = mediumFont.render("How to play", True, black)
         howToPlayRect = howToPlay.get_rect()
         howToPlayRect.center = howToPlayButton.center
-        
+
         pygame.draw.rect(screen, white, humanButton)
         screen.blit(human, humanRect)
         pygame.draw.rect(screen, white, aiButton)
@@ -105,7 +112,7 @@ while True:
         screen.blit(howToPlay, howToPlayRect)
 
         # Check if button is clicked
-        click, _, _= pygame.mouse.get_pressed()
+        click, _, _ = pygame.mouse.get_pressed()
         if click == 1:
             mouse = pygame.mouse.get_pos()
             if humanButton.collidepoint(mouse):
@@ -129,7 +136,7 @@ while True:
                 time.sleep(0.2)
                 instructions = True
                 homeScreen = False
-    
+
     elif instructions is True:
 
         # Draw title
@@ -151,7 +158,7 @@ while True:
             {
                 "gameTitle": 'AI plays Snake',
                 "text": [
-                     'AI plays snake. Human watches.',
+                    'AI plays snake. Human watches.',
                 ]
             },
             {
@@ -161,7 +168,7 @@ while True:
                     'Avoid AI snake, your own body and walls.',
                     'Eat the food: green squares.'
                 ]
-            }    
+            }
         ]
 
         for j, text in enumerate(texts):
@@ -173,7 +180,8 @@ while True:
             for i, t in enumerate(text['text']):
                 line = mediumFont.render(t, True, white)
                 lineRect = line.get_rect()
-                lineRect.center = ((width / 2), gameTitleH + (i * leftover) + leftover + leftover)
+                lineRect.center = ((width / 2), gameTitleH +
+                                   (i * leftover) + leftover + leftover)
                 screen.blit(line, lineRect)
 
         # Draw buttons
@@ -181,7 +189,7 @@ while True:
         screen.blit(back, backRect)
 
         # Check if button is clicked
-        click, _, _= pygame.mouse.get_pressed()
+        click, _, _ = pygame.mouse.get_pressed()
         if click == 1:
             mouse = pygame.mouse.get_pos()
             if backButton.collidepoint(mouse):
@@ -195,7 +203,8 @@ while True:
         for i in range(new_board.height):
             row = []
             for j in range(new_board.width):
-                rect = pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size)
+                rect = pygame.Rect(j * tile_size, i *
+                                   tile_size, tile_size, tile_size)
                 if (i, j) in new_board.wall_cells:
                     pygame.draw.rect(screen, white, rect)
                 elif (i, j) == new_board.food_cell:
@@ -207,16 +216,18 @@ while True:
                     pygame.draw.rect(screen, black, rect)
                 row.append(rect)
             tiles.append(row)
-        
+
         scoretitle = largeFont.render("Score:", True, white)
         scoretitleRect = scoretitle.get_rect()
-        scoretitleRect = pygame.Rect((w + 5) * tile_size, 5 * tile_size, (leftover * 10), titleH)
+        scoretitleRect = pygame.Rect(
+            (w + 5) * tile_size, 5 * tile_size, (leftover * 10), titleH)
         screen.blit(scoretitle, scoretitleRect)
         score = largeFont.render(str(snake.food_count), True, white)
         scoreRect = score.get_rect()
-        scoreRect = pygame.Rect((w + 5) * tile_size, 10 * tile_size, (leftover * 10), titleH)
+        scoreRect = pygame.Rect((w + 5) * tile_size,
+                                10 * tile_size, (leftover * 10), titleH)
         screen.blit(score, scoreRect)
-        
+
         # Check game over
         if snake.check_game_status(new_board):
             # Show game over title
@@ -227,9 +238,9 @@ while True:
             # Draw back button
             pygame.draw.rect(screen, white, backButton)
             screen.blit(back, backRect)
-            
+
             # Check if button is clicked
-            click, _, _= pygame.mouse.get_pressed()
+            click, _, _ = pygame.mouse.get_pressed()
             if click == 1:
                 mouse = pygame.mouse.get_pos()
                 if backButton.collidepoint(mouse):
@@ -267,7 +278,8 @@ while True:
         for i in range(new_board.height):
             row = []
             for j in range(new_board.width):
-                rect = pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size)
+                rect = pygame.Rect(j * tile_size, i *
+                                   tile_size, tile_size, tile_size)
                 if (i, j) in new_board.wall_cells:
                     pygame.draw.rect(screen, white, rect)
                 elif (i, j) == new_board.food_cell:
@@ -283,26 +295,29 @@ while True:
                     pygame.draw.rect(screen, black, rect)
                 row.append(rect)
             tiles.append(row)
-        
+
         scoretitle = largeFont.render("AI Score:", True, white)
         scoretitleRect = scoretitle.get_rect()
-        scoretitleRect = pygame.Rect((w + 2) * tile_size, 5 * tile_size, (leftover * 10), titleH)
+        scoretitleRect = pygame.Rect(
+            (w + 2) * tile_size, 5 * tile_size, (leftover * 10), titleH)
         screen.blit(scoretitle, scoretitleRect)
         score = largeFont.render(str(snake.food_count), True, white)
         scoreRect = score.get_rect()
-        scoreRect = pygame.Rect((w + 2) * tile_size, 10 * tile_size, (leftover * 10), titleH)
+        scoreRect = pygame.Rect((w + 2) * tile_size,
+                                10 * tile_size, (leftover * 10), titleH)
         screen.blit(score, scoreRect)
 
         lengthtitle = largeFont.render("AI Length:", True, white)
         lengthtitleRect = lengthtitle.get_rect()
-        lengthtitleRect = pygame.Rect((w + 2) * tile_size, 15 * tile_size, (leftover * 10), titleH)
+        lengthtitleRect = pygame.Rect(
+            (w + 2) * tile_size, 15 * tile_size, (leftover * 10), titleH)
         screen.blit(lengthtitle, lengthtitleRect)
         length = largeFont.render(str(snake.length), True, white)
         lengthRect = length.get_rect()
-        lengthRect = pygame.Rect((w + 2) * tile_size, 20 * tile_size, (leftover * 10), titleH)
+        lengthRect = pygame.Rect(
+            (w + 2) * tile_size, 20 * tile_size, (leftover * 10), titleH)
         screen.blit(length, lengthRect)
-        
-        
+
         if snake.check_game_status(new_board) or new_board.food_cell == None:
             # Show game over title
             game_over = largeFont.render("Game Over", True, white)
@@ -312,9 +327,9 @@ while True:
             # Draw back button
             pygame.draw.rect(screen, white, backButton)
             screen.blit(back, backRect)
-            
+
             # Check if button is clicked
-            click, _, _= pygame.mouse.get_pressed()
+            click, _, _ = pygame.mouse.get_pressed()
             if click == 1:
                 mouse = pygame.mouse.get_pos()
                 if backButton.collidepoint(mouse):
@@ -323,26 +338,30 @@ while True:
         else:
             eaten = snake.check_food_status(new_board)
             if snake.head_location[1] == 2 and new_board.food_cell[0] < snake.head_location[0] and (snake.head_location[0], snake.head_location[1] - 1) not in snake.middle_cells and (snake.head_location[0] - 1, snake.head_location[1] - 1) not in snake.middle_cells:
-                action = get_action((snake.head_location[0], snake.head_location[1] - 1), snake.head_location)
+                action = get_action(
+                    (snake.head_location[0], snake.head_location[1] - 1), snake.head_location)
             elif snake.head_location[1] == new_board.width - 2 and new_board.food_cell[0] > snake.head_location[0] and new_board.food_cell[0] % 2 == 0 and (snake.head_location[0] + 1, snake.head_location[1]) not in snake.middle_cells and (snake.head_location[0] + 1, snake.head_location[1] - 1) not in snake.middle_cells and (snake.head_location[0] + 2, snake.head_location[1]) not in snake.middle_cells and snake.length < (((new_board.height - 2) * (new_board.width - 2)) / 2):
-                action = get_action((snake.head_location[0] + 1, snake.head_location[1]), snake.head_location)
+                action = get_action(
+                    (snake.head_location[0] + 1, snake.head_location[1]), snake.head_location)
             elif snake.head_location[1] == 2 and new_board.food_cell[0] > snake.head_location[0] and new_board.food_cell[0] % 2 != 0 and (snake.head_location[0] + 1, snake.head_location[1]) not in snake.middle_cells and (snake.head_location[0] + 1, snake.head_location[1] + 1) not in snake.middle_cells and (snake.head_location[0] + 2, snake.head_location[1]) not in snake.middle_cells and snake.length < (((new_board.height - 2) * (new_board.width - 2)) / 2):
-                action = get_action((snake.head_location[0] + 1, snake.head_location[1]), snake.head_location)
+                action = get_action(
+                    (snake.head_location[0] + 1, snake.head_location[1]), snake.head_location)
             else:
                 head_index = path.index(snake.head_location)
                 action = get_action(path[head_index + 1], snake.head_location)
-            
+
             snake.direction = action
             snake.move_snake(new_board, eaten)
             action = None
-       
+
     elif tronGame is True:
         # Draw board and score
         tiles = []
         for i in range(new_board.height):
             row = []
             for j in range(new_board.width):
-                rect = pygame.Rect(j * tile_size, i * tile_size, tile_size, tile_size)
+                rect = pygame.Rect(j * tile_size, i *
+                                   tile_size, tile_size, tile_size)
                 if (i, j) in new_board.wall_cells:
                     pygame.draw.rect(screen, white, rect)
                 elif (i, j) == new_board.food_cell:
@@ -360,20 +379,24 @@ while True:
 
         aiscoretitle = mediumFont.render("AI Score:", True, white)
         aiscoretitleRect = aiscoretitle.get_rect()
-        aiscoretitleRect = pygame.Rect((w + 2) * tile_size, 15 * tile_size, (leftover * 10), titleH)
+        aiscoretitleRect = pygame.Rect(
+            (w + 2) * tile_size, 15 * tile_size, (leftover * 10), titleH)
         screen.blit(aiscoretitle, aiscoretitleRect)
         aiscore = largeFont.render(str(computer.food_count), True, white)
         aiscoreRect = aiscore.get_rect()
-        aiscoreRect = pygame.Rect((w + 2) * tile_size, 20 * tile_size, (leftover * 10), titleH)
+        aiscoreRect = pygame.Rect(
+            (w + 2) * tile_size, 20 * tile_size, (leftover * 10), titleH)
         screen.blit(aiscore, aiscoreRect)
 
         hscoretitle = mediumFont.render("Human Score:", True, white)
         hscoretitleRect = hscoretitle.get_rect()
-        hscoretitleRect = pygame.Rect((w + 2) * tile_size, 5 * tile_size, (leftover * 10), titleH)
+        hscoretitleRect = pygame.Rect(
+            (w + 2) * tile_size, 5 * tile_size, (leftover * 10), titleH)
         screen.blit(hscoretitle, hscoretitleRect)
         hscore = largeFont.render(str(snake.food_count), True, white)
         hscoreRect = hscore.get_rect()
-        hscoreRect = pygame.Rect((w + 2) * tile_size, 10 * tile_size, (leftover * 10), titleH)
+        hscoreRect = pygame.Rect(
+            (w + 2) * tile_size, 10 * tile_size, (leftover * 10), titleH)
         screen.blit(hscore, hscoreRect)
 
         if snake.check_game_status(new_board, computer):
@@ -385,9 +408,9 @@ while True:
             # Draw back button
             pygame.draw.rect(screen, white, backButton)
             screen.blit(back, backRect)
-            
+
             # Check if button is clicked
-            click, _, _= pygame.mouse.get_pressed()
+            click, _, _ = pygame.mouse.get_pressed()
             if click == 1:
                 mouse = pygame.mouse.get_pos()
                 if backButton.collidepoint(mouse):
@@ -398,15 +421,19 @@ while True:
             eaten = computer.check_food_status(comp_board, new_board)
             new_board.food_cell = comp_board.food_cell
             if computer.head_location[1] == 2 and comp_board.food_cell[0] < computer.head_location[0] and (computer.head_location[0], computer.head_location[1] - 1) not in computer.middle_cells and (computer.head_location[0] - 1, computer.head_location[1] - 1) not in computer.middle_cells:
-                action = get_action((computer.head_location[0], computer.head_location[1] - 1), computer.head_location)
+                action = get_action(
+                    (computer.head_location[0], computer.head_location[1] - 1), computer.head_location)
             elif computer.head_location[1] == comp_board.width - 2 and comp_board.food_cell[0] > computer.head_location[0] and comp_board.food_cell[0] % 2 == 0 and (computer.head_location[0] + 1, computer.head_location[1]) not in computer.middle_cells and (computer.head_location[0] + 1, computer.head_location[1] - 1) not in computer.middle_cells and (computer.head_location[0] + 2, computer.head_location[1]) not in computer.middle_cells and computer.length < (((comp_board.height - 2) * (comp_board.width - 2)) / 2):
-                action = get_action((computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
+                action = get_action(
+                    (computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
             elif computer.head_location[1] == 2 and comp_board.food_cell[0] > computer.head_location[0] and comp_board.food_cell[0] % 2 != 0 and (computer.head_location[0] + 1, computer.head_location[1]) not in computer.middle_cells and (computer.head_location[0] + 1, computer.head_location[1] + 1) not in computer.middle_cells and (computer.head_location[0] + 2, computer.head_location[1]) not in computer.middle_cells and computer.length < (((comp_board.height - 2) * (comp_board.width - 2)) / 2):
-                action = get_action((computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
+                action = get_action(
+                    (computer.head_location[0] + 1, computer.head_location[1]), computer.head_location)
             else:
                 head_index = path.index(computer.head_location)
-                action = get_action(path[head_index + 1], computer.head_location)
-            
+                action = get_action(
+                    path[head_index + 1], computer.head_location)
+
             computer.direction = action
             computer.move_snake(comp_board, eaten)
             action = None
@@ -434,7 +461,5 @@ while True:
                 elif key_states[pygame.K_LEFT] and snake.direction != snake.right:
                     snake.direction = snake.left
             snake.move_snake(new_board, eaten)
-            
-
 
     pygame.display.flip()

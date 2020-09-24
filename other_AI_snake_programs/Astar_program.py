@@ -7,6 +7,9 @@ import numpy as np
 
 from snake import *
 
+# Classes for BFS and DFS searches
+
+
 class Node():
     def __init__(self, state, parent, action):
         self.state = state
@@ -46,6 +49,8 @@ class QueueFrontier(StackFrontier):
             self.frontier = self.frontier[1:]
             return node
 
+# A class for AI
+
 
 class PlayerAI():
 
@@ -54,7 +59,7 @@ class PlayerAI():
         self.down = 'down'
         self.left = 'left'
         self.right = 'right'
-    
+
     def isValid(self, row, col, height, width):
         return (row >= 0) and (row < height) and (col >= 0) and (col < width)
 
@@ -63,13 +68,13 @@ class PlayerAI():
             return True
         else:
             return False
-    
+
     def isDestination(self, src, dest):
         if src == dest:
             return True
         else:
             return False
-    
+
     def calculateHvalue(self, row, col, dest):
         # abs(row-dest[0]) + abs(col-dest[1])
         return math.sqrt((row-dest[0])*(row-dest[0]) + (col-dest[1])*(col-dest[1]))
@@ -79,14 +84,14 @@ class PlayerAI():
             copied_board[row][col][0] = 1
         else:
             copied_board[row][col][0] = 0
-        
+
         copied_board[row][col][1] = f
         copied_board[row][col][2] = g
         copied_board[row][col][3] = h
         copied_board[row][col][4] = pi
         copied_board[row][col][5] = pj
         return copied_board
-    
+
     def update_snake(self, ai_board, height, width, path, length, tail, steps):
         for i in range(height):
             for j in range(width):
@@ -95,7 +100,7 @@ class PlayerAI():
                     if ai_board[i][j][6] == 0:
                         ai_board[i][j][0] = 0
                         ai_board[i][j][6] = 0
-        
+
         for p in path:
             if length > 0:
                 ai_board[p[0]][p[1]][6] = length
@@ -105,13 +110,13 @@ class PlayerAI():
             else:
                 ai_board[p[0]][p[1]][6] = 0
                 ai_board[p[0]][p[1]][0] = 0
-    
+
     def print_path(self, ai_board, height, width, length):
         for i in range(height):
             for j in range(width):
                 print(ai_board[i][j][6], end="")
             print("")
-    
+
     def trace_path(self, copied_board, dest):
         row = dest[0]
         col = dest[1]
@@ -123,10 +128,10 @@ class PlayerAI():
             temp_col = copied_board[row][col][5]
             row = temp_row
             col = temp_col
-        
+
         path.append((row, col))
         return path
-    
+
     def get_neighbors(self, cell):
         neighbors = [
             (cell[0] - 1, cell[1]),
@@ -137,15 +142,14 @@ class PlayerAI():
 
         return neighbors
 
-    
     def breadthFirstSearch(self, start, height, width):
-        frontier =QueueFrontier()
+        frontier = QueueFrontier()
         cost_so_far = {}
 
         for s in start:
             frontier.add(s)
             cost_so_far[s] = 0
-        
+
         while (not frontier.empty()):
             current = frontier.remove()
             neighbors = self.get_neighbors(current)
@@ -156,18 +160,17 @@ class PlayerAI():
                         frontier.add(n)
         return cost_so_far
 
-    
     def aStarSearch(self, src, dest, board, height, width, length, tail):
         ai_board = deepcopy(board)
         steps = 0
         if self.isValid(src[0], src[1], height, width) == False:
             print("Snake starting cell is NOT valid")
             return
-        
+
         if self.isValid(dest[0], dest[1], height, width) == False:
             print("Destintion is NOT valid")
             return
-        
+
         if self.isUnBlocked(ai_board, src[0], src[1], steps) == False or self.isUnBlocked(ai_board, dest[0], dest[1], steps) == False:
             print("Either source or destination is blocked")
             return
@@ -175,8 +178,9 @@ class PlayerAI():
         if self.isDestination(src, dest) == True:
             print("We are already at the destination")
             return
-        
-        self.update_ai_board(src[0], src[1], False, ai_board, 0.0, 0.0, 0.0, src[0], src[1])
+
+        self.update_ai_board(src[0], src[1], False,
+                             ai_board, 0.0, 0.0, 0.0, src[0], src[1])
 
         closedList = []
         openList = [{"pair": src, "f": 0}]
@@ -187,7 +191,7 @@ class PlayerAI():
 
         while (len(openList) > 0):
             p = openList.pop(0)
-            
+
             closedList.append((p["pair"]))
 
             i = p["pair"][0]
@@ -198,50 +202,51 @@ class PlayerAI():
                 depth = d
                 steps += 1
 
-            # Cell-->Popped Cell (i, j) 
-            # N -->  North       (i-1, j) 
-            # S -->  South       (i+1, j) 
-            # E -->  East        (i, j+1) 
-            # W -->  West        (i, j-1) 
+            # Cell-->Popped Cell (i, j)
+            # N -->  North       (i-1, j)
+            # S -->  South       (i+1, j)
+            # E -->  East        (i, j+1)
+            # W -->  West        (i, j-1)
 
             gNew, hNew, fNew = 0, 0, 0
-            
+
             # North
             if self.isValid(i-1, j, height, width) == True:
                 if self.isDestination((i-1, j), dest) == True:
                     ai_board[i-1][j][4] = i
                     ai_board[i-1][j][5] = j
                     path = self.trace_path(ai_board, dest)
-                    #path.append(ai_board)
+                    # path.append(ai_board)
                     foundDest = True
                     return path
-                
+
                 elif (i-1, j) not in closedList and self.isUnBlocked(ai_board, i-1, j, steps) == True:
                     gNew = ai_board[i][j][2] + 1.0
                     hNew = self.calculateHvalue(i-1, j, dest)
                     fNew = gNew + hNew
                     if ai_board[i-1][j][1] == float('inf') or ai_board[i-1][j][1] < fNew:
                         openList.append({"pair": (i-1, j), "f": fNew})
-                        ai_board = self.update_ai_board(i-1, j, False, ai_board, fNew, gNew, hNew, i, j)
-            
+                        ai_board = self.update_ai_board(
+                            i-1, j, False, ai_board, fNew, gNew, hNew, i, j)
+
             # South
             if self.isValid(i+1, j, height, width) == True:
                 if self.isDestination((i+1, j), dest) == True:
                     ai_board[i+1][j][4] = i
                     ai_board[i+1][j][5] = j
                     path = self.trace_path(ai_board, dest)
-                    #path.append(ai_board)
+                    # path.append(ai_board)
                     foundDest = True
                     return path
-                
+
                 elif (i+1, j) not in closedList and self.isUnBlocked(ai_board, i+1, j, steps) == True:
                     gNew = ai_board[i][j][2] + 1.0
                     hNew = self.calculateHvalue(i+1, j, dest)
                     fNew = gNew + hNew
                     if ai_board[i+1][j][1] == float('inf') or ai_board[i+1][j][1] < fNew:
                         openList.append({"pair": (i+1, j), "f": fNew})
-                        ai_board = self.update_ai_board(i+1, j, False, ai_board, fNew, gNew, hNew, i, j)
-
+                        ai_board = self.update_ai_board(
+                            i+1, j, False, ai_board, fNew, gNew, hNew, i, j)
 
             # East
             if self.isValid(i, j+1, height, width) == True:
@@ -249,39 +254,41 @@ class PlayerAI():
                     ai_board[i][j+1][4] = i
                     ai_board[i][j+1][5] = j
                     path = self.trace_path(ai_board, dest)
-                    #path.append(ai_board)
+                    # path.append(ai_board)
                     foundDest = True
                     return path
-                
+
                 elif (i, j+1) not in closedList and self.isUnBlocked(ai_board, i, j+1, steps) == True:
                     gNew = ai_board[i][j][2] + 1.0
                     hNew = self.calculateHvalue(i, j+1, dest)
                     fNew = gNew + hNew
                     if ai_board[i][j+1][1] == float('inf') or ai_board[i][j+1][1] < fNew:
                         openList.append({"pair": (i, j+1), "f": fNew})
-                        ai_board = self.update_ai_board(i, j+1, False, ai_board, fNew, gNew, hNew, i, j)
-            
+                        ai_board = self.update_ai_board(
+                            i, j+1, False, ai_board, fNew, gNew, hNew, i, j)
+
             # West
             if self.isValid(i, j-1, height, width) == True:
                 if self.isDestination((i, j-1), dest) == True:
                     ai_board[i][j-1][4] = i
                     ai_board[i][j-1][5] = j
                     path = self.trace_path(ai_board, dest)
-                    #path.append(ai_board)
+                    # path.append(ai_board)
                     foundDest = True
                     return path
-                
+
                 elif (i, j-1) not in closedList and self.isUnBlocked(ai_board, i, j-1, steps) == True:
                     gNew = ai_board[i][j][2] + 1.0
                     hNew = self.calculateHvalue(i, j-1, dest)
                     fNew = gNew + hNew
                     if ai_board[i][j-1][1] == float('inf') or ai_board[i][j-1][1] < fNew:
                         openList.append({"pair": (i, j-1), "f": fNew})
-                        ai_board = self.update_ai_board(i, j-1, False, ai_board, fNew, gNew, hNew, i, j)
-            
+                        ai_board = self.update_ai_board(
+                            i, j-1, False, ai_board, fNew, gNew, hNew, i, j)
+
         if foundDest == False:
             print("No path to food found")
-        
+
         return None
 
     def get_action(self, next_cell, current_cell):
@@ -293,7 +300,7 @@ class PlayerAI():
             return self.right
         else:
             return self.left
-        
+
         print("error: no action")
         return None
 
@@ -372,6 +379,3 @@ if total % 2 != 0:
     total += 0.5
 sorted_dict = {}
 """
-
-
-

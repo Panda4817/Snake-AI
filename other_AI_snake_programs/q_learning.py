@@ -5,6 +5,9 @@ import numpy as np
 
 from snake import *
 
+# A class to work out Q values for each state
+
+
 class PlayerAI():
 
     def __init__(self, alpha=1.0, epsilon=0.1):
@@ -16,19 +19,19 @@ class PlayerAI():
     def convert_board_tuple(self, d):
         t = tuple(tuple(i) for i in d)
         return t
-    
+
     def update(self, old_state, action, new_state, reward):
         """
         Update Q-learning model, given an old state, an action taken
         in that state, a new resulting state, and the reward received
         from taking that action.
         """
-        o = old_state #self.convert_board_tuple(old_state)
-        n = new_state #self.convert_board_tuple(new_state)
+        o = old_state  # self.convert_board_tuple(old_state)
+        n = new_state  # self.convert_board_tuple(new_state)
         old = self.get_q_value(o, action)
         best_future = self.best_future_reward(n)
         self.update_q_value(o, action, old, reward, best_future)
-    
+
     def get_q_value(self, state, action):
         """
         Return the Q-value for the state `state` and the action `action`.
@@ -38,7 +41,7 @@ class PlayerAI():
             return self.q[state, action]
         except KeyError:
             return 0
-    
+
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
         Update the Q-value for the state `state` and the action `action`
@@ -58,7 +61,7 @@ class PlayerAI():
         self.q[state, action] = old_q + self.alpha * \
             (reward + future_rewards - old_q)
         return True
-    
+
     def best_future_reward(self, state):
         """
         Given a state `state`, consider all possible `(state, action)`
@@ -81,7 +84,6 @@ class PlayerAI():
                 future_rewards.append(0)
         # Return the maximum reward from the list
         return max(future_rewards, default=0)
-    
 
     def choose_action_q(self, state, avoid, epsilon=True):
         """
@@ -132,10 +134,9 @@ class PlayerAI():
         # Or choose best action
         a = random.choice(best)
         return a["action"]
-    
-
 
     """The following functions are a different implementation of AI snake which was used with q-learning."""
+
     def get_avoid_cells(self, snake, board):
         avoid = []
         if snake.length > 1:
@@ -155,9 +156,9 @@ class PlayerAI():
             avoid.append('left')
         if (snake.head_location[0], snake.head_location[1] + 1) in board.wall_cells or (snake.head_location[0], snake.head_location[1] + 1) in snake.middle_cells:
             avoid.append('right')
-        
+
         return avoid
-    
+
     def get_available_actions(self, avoid):
         a = []
         for i in self.directions:
@@ -169,20 +170,24 @@ class PlayerAI():
         a_d = []
         for a in actions:
             if a == 'up':
-                man = current_board[snake.head_location[0] - 1][snake.head_location[1]] 
+                man = current_board[snake.head_location[0] -
+                                    1][snake.head_location[1]]
             elif a == 'down':
-                man = current_board[snake.head_location[0] + 1][snake.head_location[1]]  
+                man = current_board[snake.head_location[0] +
+                                    1][snake.head_location[1]]
             elif a == 'left':
-                man = current_board[snake.head_location[0]][snake.head_location[1] - 1] 
+                man = current_board[snake.head_location[0]
+                                    ][snake.head_location[1] - 1]
             elif a == 'right':
-                man = current_board[snake.head_location[0]][snake.head_location[1] + 1]
-            
+                man = current_board[snake.head_location[0]
+                                    ][snake.head_location[1] + 1]
+
             a_d.append({
                 "action": a,
                 "man": abs(man[0]) + abs(man[1])
             })
         return a_d
-    
+
     def near_edge_action(self, _next, snake, board):
         for index in np.ndindex(board.height, board.width):
             if _next == 'vertical':
@@ -199,7 +204,7 @@ class PlayerAI():
                 if index[1] <= (board.width - 2) and index[1] >= int(round(((board.width - 2) / 2), 0)):
                     if snake.head_location == index:
                         return 'left'
-    
+
     def x_y(self, direction):
         y, x = 0, 0
         if direction == self.directions[0]:
@@ -210,9 +215,9 @@ class PlayerAI():
             x = -1
         elif direction == self.directions[3]:
             x = 1
-        
+
         return y, x
-    
+
     def clear_path_check(self, num, snake, direction, board):
         y, x = self.x_y(direction)
         hit = False
@@ -222,9 +227,9 @@ class PlayerAI():
             index = [snake.head_location[0] + y, snake.head_location[1] + y]
             if tuple(index) in snake.middle_cells or tuple(index) in board.wall_cells:
                 hit = True
-        
+
         return hit
-                
+
     def snake_length_low(self, goal, actions, previous_moves, manhattan, snake, board):
         if goal == "food" or snake.length == 1:
             if snake.length > 20:
@@ -262,13 +267,10 @@ class PlayerAI():
                     continue
             snake.goal_tail = snake.head_location
 
-    
     def choose_action(self, current_cell, current_board, avoid, previous_moves, goal, snake, board):
-        actions = self.get_available_actions(avoid) 
+        actions = self.get_available_actions(avoid)
         manhattan = self.get_manhattan_distances(actions, current_board, snake)
         if snake.length < board.width and snake.length < board.height:
             return self.snake_length_low(goal, actions, previous_moves, manhattan, snake, board)
         else:
             return None
-
-    
